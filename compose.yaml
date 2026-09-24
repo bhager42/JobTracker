@@ -1,0 +1,25 @@
+# Local prod-like run: `docker compose up --build` then open http://localhost:8080
+services:
+  jobtracker:
+    build: .
+    image: jobtracker:dev
+    container_name: jobtracker
+    user: "568:568"
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: ${TZ:-America/Chicago}
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      AUTO_CLOSE_DAYS_DEFAULT: "30"
+    volumes:
+      - jobtracker-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  jobtracker-data:
