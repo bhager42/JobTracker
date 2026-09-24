@@ -58,6 +58,26 @@ export interface paths {
     patch: operations['update_application_api_applications__app_id__patch']
     trace?: never
   }
+  '/api/applications/{app_id}/documents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /**
+     * Set Documents
+     * @description Replaces the attached documents with exactly `document_ids`.
+     */
+    put: operations['set_documents_api_applications__app_id__documents_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/applications/{app_id}/status': {
     parameters: {
       query?: never
@@ -69,6 +89,59 @@ export interface paths {
     put?: never
     /** Change Status */
     post: operations['change_status_api_applications__app_id__status_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/documents': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Documents */
+    get: operations['list_documents_api_documents_get']
+    put?: never
+    /** Upload Document */
+    post: operations['upload_document_api_documents_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/documents/{doc_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete Document */
+    delete: operations['delete_document_api_documents__doc_id__delete']
+    options?: never
+    head?: never
+    /** Update Document */
+    patch: operations['update_document_api_documents__doc_id__patch']
+    trace?: never
+  }
+  '/api/documents/{doc_id}/file': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Document File */
+    get: operations['get_document_file_api_documents__doc_id__file_get']
+    put?: never
+    post?: never
     delete?: never
     options?: never
     head?: never
@@ -116,6 +189,11 @@ export interface components {
       contact_name?: string | null
       /** Date Applied */
       date_applied?: string | null
+      /**
+       * Document Ids
+       * @default []
+       */
+      document_ids?: number[]
       employment_type?: components['schemas']['EmploymentType'] | null
       /**
        * Interview Rounds
@@ -165,6 +243,8 @@ export interface components {
       created_at: string
       /** Date Applied */
       date_applied: string | null
+      /** Documents */
+      documents: components['schemas']['DocumentOut'][]
       employment_type: components['schemas']['EmploymentType'] | null
       /** History */
       history: components['schemas']['StatusHistoryOut'][]
@@ -309,6 +389,14 @@ export interface components {
       status?: components['schemas']['Status'] | null
       work_mode?: components['schemas']['WorkMode'] | null
     }
+    /** Body_upload_document_api_documents_post */
+    Body_upload_document_api_documents_post: {
+      /** Display Name */
+      display_name?: string | null
+      /** File */
+      file: string
+      kind: components['schemas']['DocumentKind']
+    }
     /** BulkAction */
     BulkAction: {
       /**
@@ -325,6 +413,94 @@ export interface components {
       /** Affected */
       affected: number
     }
+    /** DocumentInUseProblem */
+    DocumentInUseProblem: {
+      /** Applications */
+      applications: components['schemas']['LinkedApplication'][]
+      /** Detail */
+      detail?: string | null
+      /** Errors */
+      errors?: components['schemas']['FieldError'][] | null
+      /** Status */
+      status: number
+      /** Title */
+      title: string
+      /**
+       * Type
+       * @default about:blank
+       */
+      type?: string
+    }
+    /**
+     * DocumentKind
+     * @enum {string}
+     */
+    DocumentKind: 'resume' | 'cover_letter' | 'other'
+    /**
+     * DocumentLinks
+     * @description The complete set of documents attached to an application.
+     */
+    DocumentLinks: {
+      /** Document Ids */
+      document_ids: number[]
+    }
+    /** DocumentOut */
+    DocumentOut: {
+      /** Application Count */
+      application_count: number
+      /** Display Name */
+      display_name: string
+      /** Id */
+      id: number
+      kind: components['schemas']['DocumentKind']
+      /** Mime Type */
+      mime_type: string
+      /** Original Filename */
+      original_filename: string
+      /** Sha256 */
+      sha256: string
+      /** Size Bytes */
+      size_bytes: number
+      /**
+       * Uploaded At
+       * Format: date-time
+       */
+      uploaded_at: string
+    }
+    /** DocumentUpdate */
+    DocumentUpdate: {
+      /** Display Name */
+      display_name?: string | null
+      kind?: components['schemas']['DocumentKind'] | null
+    }
+    /** DocumentUploaded */
+    DocumentUploaded: {
+      /** Application Count */
+      application_count: number
+      /** Display Name */
+      display_name: string
+      /**
+       * Duplicate
+       * @description True when an identical file was already in the library; that entry is returned instead of a new one.
+       */
+      duplicate: boolean
+      /** Id */
+      id: number
+      kind: components['schemas']['DocumentKind']
+      /** Mime Type */
+      mime_type: string
+      /** Original Filename */
+      original_filename: string
+      /** Sha256 */
+      sha256: string
+      /** Size Bytes */
+      size_bytes: number
+      /**
+       * Uploaded At
+       * Format: date-time
+       */
+      uploaded_at: string
+    }
     /**
      * EmploymentType
      * @enum {string}
@@ -338,6 +514,11 @@ export interface components {
       msg: string
       /** Type */
       type: string
+    }
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components['schemas']['ValidationError'][]
     }
     /** HealthOut */
     HealthOut: {
@@ -361,6 +542,15 @@ export interface components {
      * @enum {string}
      */
     HistorySource: 'user' | 'automation' | 'import'
+    /** LinkedApplication */
+    LinkedApplication: {
+      /** Company */
+      company: string
+      /** Id */
+      id: number
+      /** Job Title */
+      job_title: string
+    }
     /** Problem */
     Problem: {
       /** Detail */
@@ -421,6 +611,19 @@ export interface components {
       note: string | null
       source: components['schemas']['HistorySource']
       to_status: components['schemas']['Status']
+    }
+    /** ValidationError */
+    ValidationError: {
+      /** Context */
+      ctx?: Record<string, never>
+      /** Input */
+      input?: unknown
+      /** Location */
+      loc: (string | number)[]
+      /** Message */
+      msg: string
+      /** Error Type */
+      type: string
     }
     /**
      * WorkMode
@@ -777,6 +980,62 @@ export interface operations {
       }
     }
   }
+  set_documents_api_applications__app_id__documents_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        app_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DocumentLinks']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ApplicationDetail']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
   change_status_api_applications__app_id__status_post: {
     parameters: {
       query?: never
@@ -829,6 +1088,239 @@ export interface operations {
         content: {
           'application/json': components['schemas']['Problem']
           'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  list_documents_api_documents_get: {
+    parameters: {
+      query?: {
+        kind?: components['schemas']['DocumentKind'] | null
+        q?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DocumentOut'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  upload_document_api_documents_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_upload_document_api_documents_post']
+      }
+    }
+    responses: {
+      /** @description An identical file already existed */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DocumentUploaded']
+        }
+      }
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DocumentUploaded']
+        }
+      }
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  delete_document_api_documents__doc_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        doc_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DocumentInUseProblem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_document_api_documents__doc_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        doc_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DocumentUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DocumentOut']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  get_document_file_api_documents__doc_id__file_get: {
+    parameters: {
+      query?: {
+        disposition?: 'inline' | 'attachment'
+      }
+      header?: never
+      path: {
+        doc_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description The file. Only PDFs are served inline; everything else downloads. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/octet-stream': unknown
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }

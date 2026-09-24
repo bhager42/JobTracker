@@ -17,9 +17,11 @@ from app.schemas import (
     ApplicationUpdate,
     BulkAction,
     BulkResult,
+    DocumentLinks,
     StatusChange,
 )
 from app.services import applications as svc
+from app.services import documents as doc_svc
 
 router = APIRouter(prefix="/api/applications", tags=["applications"], responses=PROBLEM_RESPONSES)
 
@@ -28,7 +30,11 @@ ClockDep = Annotated[Clock, Depends(get_clock)]
 
 
 def _get_or_404(session: Session, app_id: int) -> Application:
-    app = session.get(Application, app_id, options=[selectinload(Application.history)])
+    app = session.get(
+        Application,
+        app_id,
+        options=[selectinload(Application.history), selectinload(Application.documents)],
+    )
     if app is None:
         raise HTTPException(404, f"Application {app_id} not found")
     return app
@@ -70,7 +76,11 @@ def list_applications(
 def create_application(
     data: ApplicationCreate, session: SessionDep, clock: ClockDep
 ) -> ApplicationDetail:
-    app = svc.create_application(session, data, clock())
+    try:
+        app = svc.create_application(session, data, clock())
+    except doc_svc.UnknownDocuments as exc:
+        raise HTTPException(422, str(exc)) from exc
+    session.refresh(app, attribute_names=["documents"])
     return ApplicationDetail.model_validate(app)
 
 
@@ -111,6 +121,21 @@ def change_status(
         interview_rounds=data.interview_rounds,
     )
     session.commit()
+    return ApplicationDetail.model_validate(app)
+
+
+@router.put("/{app_id}/documents")
+def set_documents(app_id: int, data: DocumentLinks, session: SessionDep) -> ApplicationDetail:
+    """Replaces the attached documents with exactly `document_ids`."""
+    app = _get_or_404(session, app_id)
+    before = list(app.documents)
+    try:
+        doc_svc.set_application_documents(session, app, data.document_ids)
+    except doc_svc.UnknownDocuments as exc:
+        raise HTTPException(422, str(exc)) from exc
+    session.commit()
+    session.refresh(app, attribute_names=["documents"])  # reload in display order
+    doc_svc.refresh_counts(session, [*before, *app.documents])
     return ApplicationDetail.model_validate(app)
 
 

@@ -22,6 +22,7 @@ import {
   useUpdateApplication,
   type ApplicationDetail,
 } from '@/api/applications'
+import { ApplicationDocumentsCard } from '@/components/application-documents-card'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { EnumSelect } from '@/components/enum-select'
@@ -187,6 +188,7 @@ function Detail({ app }: { app: ApplicationDetail }) {
           </Card>
         </div>
         <div className="space-y-6">
+          <ApplicationDocumentsCard app={app} />
           <Card>
             <CardHeader>
               <CardTitle>Timeline</CardTitle>

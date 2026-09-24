@@ -76,3 +76,9 @@ class HistorySource(StrEnum):
     USER = "user"
     AUTOMATION = "automation"
     IMPORT = "import"
+
+
+class DocumentKind(StrEnum):
+    RESUME = "resume"
+    COVER_LETTER = "cover_letter"
+    OTHER = "other"

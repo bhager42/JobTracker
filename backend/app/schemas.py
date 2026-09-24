@@ -15,7 +15,8 @@ from pydantic import (
     model_validator,
 )
 
-from app.enums import EmploymentType, HistorySource, Source, Status, WorkMode
+from app.enums import DocumentKind, EmploymentType, HistorySource, Source, Status, WorkMode
+from app.problems import Problem
 
 # --- reusable field types -----------------------------------------------------------------
 
@@ -105,10 +106,14 @@ def check_salary_range(salary_min: int | None, salary_max: int | None) -> None:
         raise ValueError("salary_min must not exceed salary_max")
 
 
+DocumentIds = Annotated[list[int], Field(max_length=100)]
+
+
 class ApplicationCreate(_ApplicationFields):
     company: RequiredText
     job_title: RequiredText
     status: Status = Status.APPLIED
+    document_ids: DocumentIds = []
     salary_currency: Currency = "USD"
     interview_rounds: Rounds = 0
     auto_close_exempt: bool = False
@@ -139,6 +144,57 @@ NOT_NULLABLE = (
     "auto_close_exempt",
     "archived",
 )
+
+
+# --- documents ----------------------------------------------------------------------------
+
+
+class DocumentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    kind: DocumentKind
+    display_name: str
+    original_filename: str
+    mime_type: str
+    size_bytes: int
+    sha256: str
+    uploaded_at: datetime
+    application_count: int
+
+
+class DocumentUploaded(DocumentOut):
+    duplicate: bool = Field(
+        description="True when an identical file was already in the library; that entry is"
+        " returned instead of a new one."
+    )
+
+
+class DocumentUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    display_name: RequiredText | None = None
+    kind: DocumentKind | None = None
+
+
+class DocumentLinks(BaseModel):
+    """The complete set of documents attached to an application."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    document_ids: DocumentIds
+
+
+class LinkedApplication(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    company: str
+    job_title: str
+
+
+class DocumentInUseProblem(Problem):
+    applications: list[LinkedApplication]
 
 
 class StatusHistoryOut(BaseModel):
@@ -182,6 +238,7 @@ class ApplicationOut(BaseModel):
 
 class ApplicationDetail(ApplicationOut):
     history: list[StatusHistoryOut]
+    documents: list[DocumentOut]
 
 
 class ApplicationPage(BaseModel):

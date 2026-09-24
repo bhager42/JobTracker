@@ -12,6 +12,7 @@ from app.clock import local_date
 from app.enums import HistorySource, Source, Status, WorkMode
 from app.models import Application, StatusHistory
 from app.schemas import ApplicationCreate, ApplicationUpdate, check_salary_range
+from app.services.documents import set_application_documents
 
 
 class ValidationFailed(ValueError):
@@ -54,7 +55,7 @@ def change_status(
 
 
 def create_application(session: Session, data: ApplicationCreate, now: datetime) -> Application:
-    fields = data.model_dump(exclude={"status"})
+    fields = data.model_dump(exclude={"status", "document_ids"})
     if data.status != Status.SAVED and fields["date_applied"] is None:
         fields["date_applied"] = local_date(now)
     app = Application(
@@ -70,6 +71,8 @@ def create_application(session: Session, data: ApplicationCreate, now: datetime)
         )
     )
     session.add(app)
+    if data.document_ids:
+        set_application_documents(session, app, data.document_ids)
     session.commit()
     return app
 

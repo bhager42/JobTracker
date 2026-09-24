@@ -27,22 +27,48 @@ class Problem(BaseModel):
     errors: list[FieldError] | None = None
 
 
-# Declared on routers so the error shape is part of the OpenAPI schema.
-PROBLEM_RESPONSES: dict[int | str, dict[str, Any]] = {
-    status: {"model": Problem, "content": {PROBLEM_JSON: {}}} for status in (404, 409, 422)
-}
+def problem_responses(*statuses: int, **models: type[Problem]) -> dict[int | str, dict[str, Any]]:
+    """OpenAPI `responses` for routers, so error shapes are part of the generated types.
+
+    Pass `status_409=SomeProblem` to document a problem with extension members.
+    """
+    return {
+        status: {"model": models.get(f"status_{status}", Problem), "content": {PROBLEM_JSON: {}}}
+        for status in statuses
+    }
+
+
+PROBLEM_RESPONSES = problem_responses(404, 409, 422)
+
+
+class ProblemError(Exception):
+    """Raise to answer with a problem that carries extension members (RFC 9457 §3.2)."""
+
+    def __init__(self, problem: Problem) -> None:
+        super().__init__(problem.detail)
+        self.problem = problem
 
 
 def problem_response(
     status: int, detail: str | None = None, errors: list[FieldError] | None = None
 ) -> JSONResponse:
     body = Problem(title=HTTPStatus(status).phrase, status=status, detail=detail, errors=errors)
+    return _render(body)
+
+
+def _render(problem: Problem) -> JSONResponse:
     return JSONResponse(
-        body.model_dump(exclude_none=True), status_code=status, media_type=PROBLEM_JSON
+        problem.model_dump(mode="json", exclude_none=True),
+        status_code=problem.status,
+        media_type=PROBLEM_JSON,
     )
 
 
 def install_problem_handlers(app: FastAPI) -> None:
+    @app.exception_handler(ProblemError)
+    async def problem_error(_request: Request, exc: ProblemError) -> JSONResponse:
+        return _render(exc.problem)
+
     @app.exception_handler(StarletteHTTPException)
     async def http_exception(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
         detail = exc.detail if isinstance(exc.detail, str) else None

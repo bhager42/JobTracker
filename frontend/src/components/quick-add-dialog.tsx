@@ -6,6 +6,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 
 import { useCreateApplication } from '@/api/applications'
+import { DocumentSelect } from '@/components/document-select'
 import { EnumSelect } from '@/components/enum-select'
 import { FormField } from '@/components/form-field'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,8 @@ import { STATUS_LABELS } from '@/lib/status'
 
 export function QuickAddDialog() {
   const [open, setOpen] = useState(false)
+  const [resumeId, setResumeId] = useState<number | null>(null)
+  const [coverLetterId, setCoverLetterId] = useState<number | null>(null)
   const navigate = useNavigate()
   const create = useCreateApplication()
   const form = useForm<ApplicationFormValues>({
@@ -41,13 +44,18 @@ export function QuickAddDialog() {
   const status = useWatch({ control: form.control, name: 'status' })
 
   const onOpenChange = (next: boolean) => {
-    if (next) form.reset(emptyApplicationForm(todayISO()))
+    if (next) {
+      form.reset(emptyApplicationForm(todayISO()))
+      setResumeId(null)
+      setCoverLetterId(null)
+    }
     setOpen(next)
   }
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const app = await create.mutateAsync(toCreateBody(values))
+      const document_ids = [resumeId, coverLetterId].filter((id) => id !== null)
+      const app = await create.mutateAsync({ ...toCreateBody(values), document_ids })
       setOpen(false)
       toast.success(`Added ${app.company}`, {
         action: {
@@ -72,7 +80,7 @@ export function QuickAddDialog() {
         <DialogHeader>
           <DialogTitle>New application</DialogTitle>
           <DialogDescription>
-            Just the basics. You can add everything else from the detail page.
+            Just the basics. Everything else can be added from the detail page.
           </DialogDescription>
         </DialogHeader>
         <form id="quick-add" onSubmit={onSubmit} className="grid gap-4" noValidate>
@@ -131,6 +139,24 @@ export function QuickAddDialog() {
                 type="date"
                 {...errorProps('qa-date', errors.date_applied?.message)}
                 {...form.register('date_applied')}
+              />
+            </FormField>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label="Resume" htmlFor="qa-resume">
+              <DocumentSelect
+                id="qa-resume"
+                kind="resume"
+                value={resumeId}
+                onChange={setResumeId}
+              />
+            </FormField>
+            <FormField label="Cover letter" htmlFor="qa-cover">
+              <DocumentSelect
+                id="qa-cover"
+                kind="cover_letter"
+                value={coverLetterId}
+                onChange={setCoverLetterId}
               />
             </FormField>
           </div>

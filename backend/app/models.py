@@ -5,22 +5,26 @@ from typing import Any
 
 from sqlalchemy import (
     Boolean,
+    Column,
     Date,
     DateTime,
     Dialect,
     ForeignKey,
     Integer,
     String,
+    Table,
     Text,
     TypeDecorator,
     false,
+    func,
+    select,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from app.db import Base
-from app.enums import EmploymentType, HistorySource, Source, Status, WorkMode
+from app.enums import DocumentKind, EmploymentType, HistorySource, Source, Status, WorkMode
 
-__all__ = ["Application", "Base", "StatusHistory"]
+__all__ = ["Application", "Base", "Document", "StatusHistory", "application_documents"]
 
 
 class UTCDateTime(TypeDecorator[datetime]):
@@ -48,6 +52,24 @@ def _enum_column(enum: type[Any]) -> String:
     # Plain TEXT columns: enum values are validated by Pydantic, and adding a status later
     # then needs no table rebuild.
     return String(max(len(e.value) for e in enum))
+
+
+# Many-to-many: deleting an application drops its links; a linked document can't be deleted.
+application_documents = Table(
+    "application_documents",
+    Base.metadata,
+    Column(
+        "application_id",
+        ForeignKey("applications.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "document_id",
+        ForeignKey("documents.id", ondelete="RESTRICT"),
+        primary_key=True,
+        index=True,
+    ),
+)
 
 
 class Application(Base):
@@ -85,6 +107,12 @@ class Application(Base):
         passive_deletes=True,
         order_by="StatusHistory.changed_at, StatusHistory.id",
     )
+    documents: Mapped[list["Document"]] = relationship(
+        secondary=application_documents,
+        back_populates="applications",
+        passive_deletes=True,
+        order_by="Document.kind, Document.display_name",
+    )
 
 
 class StatusHistory(Base):
@@ -101,3 +129,34 @@ class StatusHistory(Base):
     note: Mapped[str | None] = mapped_column(Text)
 
     application: Mapped[Application] = relationship(back_populates="history")
+
+
+class Document(Base):
+    """A file in the reusable document library. The file lives at
+    `uploads/<stored_filename>`, a name the server generates; user input never builds a path."""
+
+    __tablename__ = "documents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    kind: Mapped[DocumentKind] = mapped_column(_enum_column(DocumentKind))
+    display_name: Mapped[str] = mapped_column(Text)
+    original_filename: Mapped[str] = mapped_column(Text)
+    stored_filename: Mapped[str] = mapped_column(String(64), unique=True)
+    mime_type: Mapped[str] = mapped_column(Text)
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64), index=True)
+    uploaded_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    # "Used in N applications", loaded with every document.
+    application_count: Mapped[int] = column_property(
+        select(func.count())
+        .where(application_documents.c.document_id == id)
+        .correlate_except(application_documents)
+        .scalar_subquery()
+    )
+
+    applications: Mapped[list[Application]] = relationship(
+        secondary=application_documents,
+        back_populates="documents",
+        passive_deletes=True,
+        order_by="Application.company, Application.id",
+    )

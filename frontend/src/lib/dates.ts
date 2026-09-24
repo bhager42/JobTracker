@@ -7,7 +7,8 @@ export function todayISO(now: Date = new Date()): string {
 
 /**
  * Formats a plain API date (`YYYY-MM-DD`). `parseISO` reads a bare date as local midnight,
- * so the day never shifts the way `new Date('2026-03-10')` (UTC midnight) can.
+ * so the day never shifts the way `new Date('2026-03-10')` (UTC midnight) can. A full UTC
+ * timestamp gives its local calendar date.
  */
 export function formatDate(value: string | null | undefined): string {
   return value ? format(parseISO(value), 'MMM d, yyyy') : '—'

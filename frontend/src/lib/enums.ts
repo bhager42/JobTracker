@@ -30,3 +30,11 @@ export const SOURCE_LABELS = {
 export function entries<K extends string>(labels: Record<K, string>): [K, string][] {
   return Object.entries(labels) as [K, string][]
 }
+
+export type DocumentKind = Schemas['DocumentKind']
+
+export const DOCUMENT_KIND_LABELS = {
+  resume: 'Resume',
+  cover_letter: 'Cover letter',
+  other: 'Other',
+} as const satisfies Record<DocumentKind, string>

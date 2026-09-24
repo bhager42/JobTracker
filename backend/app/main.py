@@ -11,7 +11,9 @@ from app.config import Settings, get_settings
 from app.db import make_engine, make_session_factory
 from app.migrate import upgrade_to_head
 from app.problems import install_problem_handlers
-from app.routers import applications, health
+from app.routers import applications, documents, health
+from app.security import BodySizeLimitMiddleware
+from app.services.storage import remove_stale_temp_files
 
 log = logging.getLogger("jobtracker")
 
@@ -26,6 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         settings.data_dir.mkdir(parents=True, exist_ok=True)
         settings.uploads_dir.mkdir(parents=True, exist_ok=True)
+        remove_stale_temp_files(settings.uploads_dir)
         upgrade_to_head(settings.database_url)
         engine = make_engine(settings.database_url)
         with engine.connect():
@@ -48,6 +51,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_problem_handlers(app)
     app.include_router(health.router)
     app.include_router(applications.router)
+    app.include_router(documents.router)
+    app.add_middleware(
+        BodySizeLimitMiddleware,
+        default_limit=4 * 1024 * 1024,
+        # The file itself is checked exactly in storage; this allows for multipart overhead.
+        upload_limit=(settings.max_upload_mb + 1) * 1024 * 1024,
+        upload_paths=frozenset({"/api/documents"}),
+    )
 
     _mount_spa(app, settings.static_dir)
     return app

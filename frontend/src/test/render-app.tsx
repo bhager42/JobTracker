@@ -7,11 +7,13 @@ import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/rea
 import { render } from '@testing-library/react'
 
 import type { ApplicationDetail } from '@/api/applications'
+import type { Document } from '@/api/documents'
 import { ThemeProvider } from '@/components/theme-provider'
 import { routeTree } from '@/router'
 
 export interface FakeRequest {
   url: URL
+  /** Parsed JSON, or `FormData` for multipart requests. */
   body: unknown
   headers: Headers
 }
@@ -31,8 +33,11 @@ export function renderApp(url: string, handlers: Record<string, Handler>) {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = new Request(input, init)
     const reqUrl = new URL(request.url)
-    const text = await request.text()
-    const req = { url: reqUrl, body: text ? JSON.parse(text) : undefined, headers: request.headers }
+    // Multipart bodies arrive as FormData via the TestRequest in src/test-setup.ts.
+    const form = (request as Request & { formDataBody?: FormData }).formDataBody
+    const text = form ? '' : await request.text()
+    const body = form ?? (text ? JSON.parse(text) : undefined)
+    const req = { url: reqUrl, body, headers: request.headers }
     // Match exact paths first, then patterns with a numeric id segment.
     const key = `${request.method} ${reqUrl.pathname}`
     const handler =
@@ -93,6 +98,7 @@ export function makeApplication(overrides: Partial<ApplicationDetail> = {}): App
     archived: false,
     created_at: '2026-03-10T15:00:00Z',
     updated_at: '2026-03-10T15:00:00Z',
+    documents: [],
     history: [
       {
         id: id * 100,
@@ -103,6 +109,22 @@ export function makeApplication(overrides: Partial<ApplicationDetail> = {}): App
         note: null,
       },
     ],
+    ...overrides,
+  }
+}
+
+export function makeDocument(overrides: Partial<Document> = {}): Document {
+  const id = overrides.id ?? nextId++
+  return {
+    id,
+    kind: 'resume',
+    display_name: 'Resume – Backend',
+    original_filename: 'resume.pdf',
+    mime_type: 'application/pdf',
+    size_bytes: 48_000,
+    sha256: 'a'.repeat(64),
+    uploaded_at: '2026-03-01T12:00:00Z',
+    application_count: 0,
     ...overrides,
   }
 }
