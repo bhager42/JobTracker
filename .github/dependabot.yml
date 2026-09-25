@@ -1,0 +1,21 @@
+# Keeps pinned versions current (PLAN.md §9.7): action SHAs, base image digests, and lockfiles.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    groups:
+      actions: { patterns: ["*"] }
+  - package-ecosystem: docker
+    directory: /
+    schedule: { interval: monthly }
+  - package-ecosystem: uv
+    directory: /backend
+    schedule: { interval: monthly }
+    groups:
+      python: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: monthly }
+    groups:
+      frontend: { patterns: ["*"] }

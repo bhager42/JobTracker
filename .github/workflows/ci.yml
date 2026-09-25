@@ -1,0 +1,185 @@
+# Lint, test, audit, build the image, scan it, run the end-to-end suite against it
+# (via compose.yaml), and publish to GHCR (PLAN.md §12 Phase 8).
+#
+# Publishing: pushes to main publish :main and :sha-<commit>. A tag vX.Y.Z (matching
+# backend/pyproject.toml) publishes :X.Y.Z, :X.Y, and :latest. Pull requests build but never push.
+#
+# Actions are pinned to commit SHAs (PLAN.md §9.7); Dependabot keeps them current.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/jobtracker
+
+jobs:
+  backend:
+    name: Backend (ruff, mypy, pytest, pip-audit)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.18"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      # Also checks that migrations match the models and frontend/src/api is regenerated.
+      - run: uv run pytest -q
+      - name: Audit runtime dependencies
+        run: |
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt > "$RUNNER_TEMP/requirements.txt"
+          uvx pip-audit==2.10.1 --strict --disable-pip -r "$RUNNER_TEMP/requirements.txt"
+
+  frontend:
+    name: Frontend (oxlint, tsc, prettier, vitest, build, audit)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - name: Audit runtime dependencies
+        run: pnpm audit --prod --audit-level high
+
+  image:
+    name: Image (build, Trivy, end-to-end, publish)
+    needs: [backend, frontend]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Work out the version
+        id: version
+        run: |
+          project=$(sed -n 's/^version = "\(.*\)"/\1/p' backend/pyproject.toml)
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            tag="${GITHUB_REF#refs/tags/v}"
+            if [[ "$tag" != "$project" ]]; then
+              echo "::error::Tag v$tag doesn't match backend/pyproject.toml version $project"
+              exit 1
+            fi
+            echo "app=$tag" >> "$GITHUB_OUTPUT"
+          else
+            echo "app=$project-dev.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=ref,event=branch
+            type=sha,format=short
+          labels: |
+            org.opencontainers.image.title=JobTracker
+            org.opencontainers.image.description=Self-hosted job application tracker
+
+      - name: Build (linux/amd64) for testing
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: jobtracker:dev
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.app }}
+            BUILD_SHA=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan the image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: jobtracker:dev
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Start the app with compose.yaml (non-root, read-only rootfs)
+        run: docker compose up --detach --no-build --wait --wait-timeout 90
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: End-to-end tests against the container
+        working-directory: frontend
+        env:
+          E2E_BASE_URL: http://localhost:8080
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test
+      - name: Container logs
+        if: failure()
+        run: docker compose logs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/test-results/
+          retention-days: 7
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.app }}
+            BUILD_SHA=${{ github.sha }}
+          cache-from: type=gha

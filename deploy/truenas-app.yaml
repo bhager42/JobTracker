@@ -1,8 +1,9 @@
-# Paste into TrueNAS SCALE: Apps -> Discover Apps -> ⋮ -> Install via YAML.
-# Replace <your-github-user>, the dataset path, TZ, and ALLOWED_HOSTS for your setup.
+# Paste into TrueNAS SCALE 25.10: Apps -> Discover Apps -> ⋮ -> Install via YAML.
+# Change: the dataset path, TZ, and ALLOWED_HOSTS. Pin the image to a released version.
+# See README.md "Install on TrueNAS SCALE" for the dataset and permission steps.
 services:
   jobtracker:
-    image: ghcr.io/<your-github-user>/jobtracker:latest
+    image: ghcr.io/bhager42/jobtracker:0.1.0
     container_name: jobtracker
     restart: unless-stopped
     user: "568:568"
@@ -10,11 +11,12 @@ services:
       - "30420:8080"
     environment:
       TZ: America/Chicago
-      ALLOWED_HOSTS: "truenas.local,192.168.1.10,localhost"
+      # Every name and IP you'll use to open the app (others get a 400).
+      ALLOWED_HOSTS: "truenas.local,192.168.1.10"
       AUTO_CLOSE_DAYS_DEFAULT: "30"
       # Optional sign-in. Off unless one of these is set:
-      # AUTH_PASSWORD: "choose-a-long-passphrase"
       # AUTH_PASSWORD_FILE: /data/password.txt
+      # AUTH_PASSWORD: "choose-a-long-passphrase"
     volumes:
       - /mnt/tank/apps/jobtracker:/data
     read_only: true
