@@ -76,6 +76,8 @@ class ApplicationRecord(_Strict):
     salary_min: int | None
     salary_max: int | None
     salary_currency: str | None
+    # Added in 0.1.2; optional so earlier backups still import.
+    salary_expectation: int | None = None
     source: Source | None
     contact_name: str | None
     contact_email: str | None
@@ -163,6 +165,7 @@ CSV_COLUMNS = [
     "salary_min",
     "salary_max",
     "salary_currency",
+    "salary_expectation",
     "contact_name",
     "contact_email",
     "job_url",

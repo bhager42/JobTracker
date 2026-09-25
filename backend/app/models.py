@@ -108,6 +108,8 @@ class Application(Base):
     salary_min: Mapped[int | None] = mapped_column(Integer)
     salary_max: Mapped[int | None] = mapped_column(Integer)
     salary_currency: Mapped[str | None] = mapped_column(String(3), default="USD")
+    # What you asked for (the range above is what the posting advertised). Same currency.
+    salary_expectation: Mapped[int | None] = mapped_column(Integer)
     source: Mapped[Source | None] = mapped_column(_enum_column(Source))
     contact_name: Mapped[str | None] = mapped_column(Text)
     contact_email: Mapped[str | None] = mapped_column(Text)

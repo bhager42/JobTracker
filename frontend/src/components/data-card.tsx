@@ -164,6 +164,7 @@ const FIELD_LABELS: Record<string, string> = {
   salary_min: 'Salary (min)',
   salary_max: 'Salary (max)',
   salary_currency: 'Currency',
+  salary_expectation: 'Salary expectation',
   contact_name: 'Contact name',
   contact_email: 'Contact email',
   notes: 'Notes',

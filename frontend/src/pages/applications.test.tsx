@@ -186,3 +186,20 @@ describe('Application detail page', () => {
     expect(await screen.findByText('Application not found')).toBeInTheDocument()
   })
 })
+
+test('the detail page saves a salary expectation', async () => {
+  const user = userEvent.setup()
+  const app = makeApplication({ salary_min: 120000, salary_max: 150000 })
+  const { api } = renderApp(`/applications/${app.id}`, {
+    'GET /api/applications/:id': () => Response.json(app),
+    'PATCH /api/applications/:id': ({ body }) => Response.json({ ...app, ...(body as object) }),
+  })
+  await user.type(await screen.findByLabelText('Salary expectation'), '145000')
+  await user.click(screen.getByRole('button', { name: 'Save changes' }))
+  await waitFor(() =>
+    expect(api.calls.find((c) => c.method === 'PATCH')?.req.body).toMatchObject({
+      salary_expectation: 145000,
+      salary_min: 120000,
+    }),
+  )
+})

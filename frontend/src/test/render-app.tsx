@@ -85,6 +85,7 @@ export function makeApplication(overrides: Partial<ApplicationDetail> = {}): App
     employment_type: null,
     salary_min: null,
     salary_max: null,
+    salary_expectation: null,
     salary_currency: 'USD',
     source: null,
     contact_name: null,

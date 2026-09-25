@@ -347,10 +347,17 @@ function DetailsCard({ form }: { form: UseFormReturn<ApplicationFormValues> }) {
         {select('work_mode', 'Work mode', WORK_MODE_LABELS)}
         {select('employment_type', 'Employment type', EMPLOYMENT_TYPE_LABELS)}
         {select('source', 'Source', SOURCE_LABELS)}
-        <div className="grid grid-cols-[1fr_1fr_5rem] gap-2">
+        {/* All salary fields in one row: the posted range, then what you asked for. */}
+        <div className="grid grid-cols-[1fr_1fr_5rem] gap-2 sm:col-span-2 sm:grid-cols-[1fr_1fr_5rem_1.25fr]">
           {text('salary_min', 'Salary min', { inputMode: 'numeric' })}
           {text('salary_max', 'Salary max', { inputMode: 'numeric' })}
           {text('salary_currency', 'Currency', { maxLength: 3, className: 'uppercase' })}
+          {text(
+            'salary_expectation',
+            'Salary expectation',
+            { inputMode: 'numeric', placeholder: 'What you asked for' },
+            'col-span-3 sm:col-span-1',
+          )}
         </div>
         {text('contact_name', 'Contact name')}
         {text('contact_email', 'Contact email', { type: 'email' })}

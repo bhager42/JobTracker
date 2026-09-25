@@ -103,6 +103,7 @@ class _ApplicationFields(BaseModel):
     salary_min: Salary = None
     salary_max: Salary = None
     salary_currency: Currency = None
+    salary_expectation: Salary = None
     source: Source | None = None
     contact_name: OptionalText = None
     contact_email: Email = None
@@ -231,6 +232,7 @@ class ApplicationOut(OutputModel):
     salary_min: int | None
     salary_max: int | None
     salary_currency: str | None
+    salary_expectation: int | None
     source: Source | None
     contact_name: str | None
     contact_email: str | None

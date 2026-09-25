@@ -135,6 +135,18 @@ const COLUMNS: ColumnDef<Features, Application>[] = [
     meta: { label: 'Salary', className: 'tabular-nums' },
   },
   {
+    id: 'salary_expectation',
+    cell: ({ row }) =>
+      muted(
+        formatSalary(
+          row.original.salary_expectation,
+          row.original.salary_expectation,
+          row.original.salary_currency,
+        ),
+      ),
+    meta: { label: 'Expectation', className: 'tabular-nums' },
+  },
+  {
     id: 'status_changed_at',
     cell: ({ row }) => formatRelative(row.original.status_changed_at),
     meta: { label: 'Status changed', sortField: 'status_changed_at' },
@@ -153,6 +165,7 @@ const VISIBILITY_KEY = 'jobtracker-applications-columns'
 const DEFAULT_VISIBILITY: ColumnVisibilityState = {
   location: false,
   salary: false,
+  salary_expectation: false,
   status_changed_at: false,
   updated_at: false,
 }

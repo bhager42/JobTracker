@@ -45,6 +45,7 @@ export const applicationFormSchema = z
     source: optionalEnum(SOURCE_LABELS),
     salary_min: wholeNumber,
     salary_max: wholeNumber,
+    salary_expectation: wholeNumber,
     salary_currency: z
       .string()
       .trim()
@@ -88,6 +89,7 @@ export function emptyApplicationForm(today: string): ApplicationFormValues {
     source: '',
     salary_min: '',
     salary_max: '',
+    salary_expectation: '',
     salary_currency: 'USD',
     contact_name: '',
     contact_email: '',
@@ -111,6 +113,7 @@ export function formFromApplication(app: Application): ApplicationFormValues {
     source: app.source ?? '',
     salary_min: str(app.salary_min),
     salary_max: str(app.salary_max),
+    salary_expectation: str(app.salary_expectation),
     salary_currency: str(app.salary_currency),
     contact_name: str(app.contact_name),
     contact_email: str(app.contact_email),
@@ -144,6 +147,7 @@ function editableFields(values: ApplicationFormValues) {
     source: orNull(values.source),
     salary_min: numOrNull(values.salary_min),
     salary_max: numOrNull(values.salary_max),
+    salary_expectation: numOrNull(values.salary_expectation),
     salary_currency: orNull(values.salary_currency.trim().toUpperCase()),
     contact_name: orNull(values.contact_name.trim()),
     contact_email: orNull(values.contact_email.trim()),

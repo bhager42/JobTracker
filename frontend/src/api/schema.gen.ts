@@ -555,6 +555,8 @@ export interface components {
        * @default USD
        */
       salary_currency?: string | null
+      /** Salary Expectation */
+      salary_expectation?: number | null
       /** Salary Max */
       salary_max?: number | null
       /** Salary Min */
@@ -615,6 +617,8 @@ export interface components {
       notes: string | null
       /** Salary Currency */
       salary_currency: string | null
+      /** Salary Expectation */
+      salary_expectation: number | null
       /** Salary Max */
       salary_max: number | null
       /** Salary Min */
@@ -680,6 +684,8 @@ export interface components {
       notes: string | null
       /** Salary Currency */
       salary_currency: string | null
+      /** Salary Expectation */
+      salary_expectation: number | null
       /** Salary Max */
       salary_max: number | null
       /** Salary Min */
@@ -743,6 +749,8 @@ export interface components {
       notes?: string | null
       /** Salary Currency */
       salary_currency?: string | null
+      /** Salary Expectation */
+      salary_expectation?: number | null
       /** Salary Max */
       salary_max?: number | null
       /** Salary Min */

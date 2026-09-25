@@ -152,3 +152,26 @@ describe('formatting', () => {
     expect(formatSalary(null, null, 'USD')).toBe('')
   })
 })
+
+describe('salary expectation', () => {
+  const values = {
+    ...emptyApplicationForm('2026-03-10'),
+    company: 'Acme',
+    job_title: 'Engineer',
+  }
+
+  test('is sent as a number, or null when blank', () => {
+    expect(toUpdateBody({ ...values, salary_expectation: '145000' }).salary_expectation).toBe(
+      145000,
+    )
+    expect(toUpdateBody({ ...values, salary_expectation: '' }).salary_expectation).toBeNull()
+    expect(
+      formFromApplication(makeApplication({ salary_expectation: 150000 })).salary_expectation,
+    ).toBe('150000')
+  })
+
+  test('must be a whole number', () => {
+    const result = applicationFormSchema.safeParse({ ...values, salary_expectation: '12.5' })
+    expect(result.success).toBe(false)
+  })
+})

@@ -38,6 +38,15 @@ FIELD_SYNONYMS: dict[str, tuple[str, ...]] = {
     "salary_min": ("salarymin", "minsalary", "salary", "salaryfrom", "pay"),
     "salary_max": ("salarymax", "maxsalary", "salaryto"),
     "salary_currency": ("currency", "salarycurrency"),
+    "salary_expectation": (
+        "salaryexpectation",
+        "expectedsalary",
+        "desiredsalary",
+        "expectation",
+        "ask",
+        "salaryask",
+        "askingsalary",
+    ),
     "contact_name": ("contact", "contactname", "recruiter", "hiringmanager"),
     "contact_email": ("contactemail", "email", "recruiteremail"),
     "notes": ("notes", "note", "comments", "comment"),
@@ -211,7 +220,7 @@ def convert_row(values: dict[str, str]) -> ApplicationCreate:
             continue
         if field_name == "date_applied":
             data[field_name] = parse_date(text)
-        elif field_name in ("salary_min", "salary_max"):
+        elif field_name in ("salary_min", "salary_max", "salary_expectation"):
             data[field_name] = parse_money(text)
         elif field_name == "status":
             data[field_name] = parse_status(text)

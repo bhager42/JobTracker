@@ -239,6 +239,19 @@
             "default": "USD",
             "title": "Salary Currency"
           },
+          "salary_expectation": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Expectation"
+          },
           "salary_max": {
             "anyOf": [
               {
@@ -457,6 +470,17 @@
             ],
             "title": "Salary Currency"
           },
+          "salary_expectation": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Expectation"
+          },
           "salary_max": {
             "anyOf": [
               {
@@ -524,6 +548,7 @@
           "salary_min",
           "salary_max",
           "salary_currency",
+          "salary_expectation",
           "source",
           "contact_name",
           "contact_email",
@@ -694,6 +719,17 @@
             ],
             "title": "Salary Currency"
           },
+          "salary_expectation": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Expectation"
+          },
           "salary_max": {
             "anyOf": [
               {
@@ -761,6 +797,7 @@
           "salary_min",
           "salary_max",
           "salary_currency",
+          "salary_expectation",
           "source",
           "contact_name",
           "contact_email",
@@ -982,6 +1019,19 @@
               }
             ],
             "title": "Salary Currency"
+          },
+          "salary_expectation": {
+            "anyOf": [
+              {
+                "maximum": 100000000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Expectation"
           },
           "salary_max": {
             "anyOf": [
