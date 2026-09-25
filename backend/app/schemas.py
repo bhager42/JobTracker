@@ -15,8 +15,26 @@ from pydantic import (
     model_validator,
 )
 
-from app.enums import DocumentKind, EmploymentType, HistorySource, Source, Status, WorkMode
+from app.enums import (
+    AUTO_CLOSE_ALLOWED_STATUSES,
+    DocumentKind,
+    EmploymentType,
+    HistorySource,
+    Source,
+    Status,
+    WorkMode,
+)
 from app.problems import Problem
+
+
+class OutputModel(BaseModel):
+    """Base for response bodies: fields with defaults are still always sent, so the generated
+    TypeScript types mark them required rather than optional."""
+
+    model_config = ConfigDict(
+        from_attributes=True, json_schema_serialization_defaults_required=True
+    )
+
 
 # --- reusable field types -----------------------------------------------------------------
 
@@ -149,9 +167,7 @@ NOT_NULLABLE = (
 # --- documents ----------------------------------------------------------------------------
 
 
-class DocumentOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class DocumentOut(OutputModel):
     id: int
     kind: DocumentKind
     display_name: str
@@ -185,9 +201,7 @@ class DocumentLinks(BaseModel):
     document_ids: DocumentIds
 
 
-class LinkedApplication(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class LinkedApplication(OutputModel):
     id: int
     company: str
     job_title: str
@@ -197,9 +211,7 @@ class DocumentInUseProblem(Problem):
     applications: list[LinkedApplication]
 
 
-class StatusHistoryOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class StatusHistoryOut(OutputModel):
     id: int
     from_status: Status | None
     to_status: Status
@@ -208,9 +220,7 @@ class StatusHistoryOut(BaseModel):
     note: str | None
 
 
-class ApplicationOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class ApplicationOut(OutputModel):
     id: int
     company: str
     job_title: str
@@ -234,6 +244,13 @@ class ApplicationOut(BaseModel):
     archived: bool
     created_at: datetime
     updated_at: datetime
+    auto_closed: bool = Field(
+        default=False, description="Closed as Not Selected by automation; can be undone."
+    )
+    auto_close_at: datetime | None = Field(
+        default=None,
+        description="When the auto-close rule will close this application, if it applies.",
+    )
 
 
 class ApplicationDetail(ApplicationOut):
@@ -241,7 +258,7 @@ class ApplicationDetail(ApplicationOut):
     documents: list[DocumentOut]
 
 
-class ApplicationPage(BaseModel):
+class ApplicationPage(OutputModel):
     items: list[ApplicationOut]
     total: int
     page: int
@@ -270,5 +287,60 @@ class BulkAction(BaseModel):
         return self
 
 
-class BulkResult(BaseModel):
+class BulkResult(OutputModel):
     affected: int
+
+
+# --- settings -----------------------------------------------------------------------------
+
+
+def _check_auto_close_statuses(statuses: list[Status]) -> list[Status]:
+    not_allowed = [s for s in statuses if s not in AUTO_CLOSE_ALLOWED_STATUSES]
+    if not_allowed:
+        allowed = ", ".join(AUTO_CLOSE_ALLOWED_STATUSES)
+        raise ValueError(f"only these statuses can auto-close: {allowed}")
+    # Stable order, no duplicates.
+    return [s for s in AUTO_CLOSE_ALLOWED_STATUSES if s in statuses]
+
+
+AutoCloseDays = Annotated[int, Field(ge=1, le=365)]
+AutoCloseStatuses = Annotated[
+    list[Status], Field(min_length=1), AfterValidator(_check_auto_close_statuses)
+]
+
+
+class AutoCloseSettings(OutputModel):
+    enabled: bool = True
+    days: AutoCloseDays = 30
+    statuses: AutoCloseStatuses = [Status.APPLIED]
+
+
+class AutoCloseSettingsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool | None = None
+    days: AutoCloseDays | None = None
+    statuses: AutoCloseStatuses | None = None
+
+
+class SettingsOut(OutputModel):
+    auto_close: AutoCloseSettings
+    auto_close_allowed_statuses: list[Status] = list(AUTO_CLOSE_ALLOWED_STATUSES)
+
+
+class SettingsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    auto_close: AutoCloseSettingsUpdate | None = None
+
+
+class AutoCloseRunResult(OutputModel):
+    enabled: bool
+    closed: int
+    application_ids: list[int]
+
+
+class AboutOut(OutputModel):
+    version: str
+    build_sha: str
+    data_dir: str

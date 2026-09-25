@@ -4,10 +4,12 @@ import {
   Archive,
   ArchiveRestore,
   ArrowLeft,
+  Bot,
   ExternalLink,
   FileQuestion,
   Pencil,
   Trash2,
+  Undo2,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Controller, useForm, useWatch, type UseFormReturn } from 'react-hook-form'
@@ -19,10 +21,12 @@ import {
   useApplication,
   useChangeStatus,
   useDeleteApplication,
+  useUndoAutoClose,
   useUpdateApplication,
   type ApplicationDetail,
 } from '@/api/applications'
 import { ApplicationDocumentsCard } from '@/components/application-documents-card'
+import { AutoCloseHint, AutoClosedIcon } from '@/components/auto-close-hint'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { EnumSelect } from '@/components/enum-select'
@@ -47,6 +51,7 @@ import {
 import { errorProps } from '@/lib/aria'
 import { formatDate, formatDateTime } from '@/lib/dates'
 import { EMPLOYMENT_TYPE_LABELS, SOURCE_LABELS, WORK_MODE_LABELS } from '@/lib/enums'
+import { STATUS_META } from '@/lib/status'
 
 export function ApplicationDetailPage() {
   const { id } = useParams({ from: '/applications/$id' })
@@ -79,6 +84,7 @@ function Detail({ app }: { app: ApplicationDetail }) {
   const update = useUpdateApplication(app.id)
   const changeStatus = useChangeStatus(app.id)
   const remove = useDeleteApplication()
+  const undo = useUndoAutoClose(app.id)
   const [statusOpen, setStatusOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -108,6 +114,15 @@ function Detail({ app }: { app: ApplicationDetail }) {
     }
   }
 
+  const doUndo = async () => {
+    try {
+      const restored = await undo.mutateAsync()
+      toast.success(`Restored to ${STATUS_META[restored.status].label}`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not undo')
+    }
+  }
+
   const doDelete = async () => {
     try {
       await remove.mutateAsync(app.id)
@@ -133,7 +148,9 @@ function Detail({ app }: { app: ApplicationDetail }) {
             <p className="text-muted-foreground">{app.job_title}</p>
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <StatusBadge status={app.status} interviewRounds={app.interview_rounds} />
+              {app.auto_closed && <AutoClosedIcon />}
               {app.archived && <Badge variant="secondary">Archived</Badge>}
+              <AutoCloseHint autoCloseAt={app.auto_close_at} />
               {app.job_url && (
                 <a
                   href={app.job_url}
@@ -168,6 +185,23 @@ function Detail({ app }: { app: ApplicationDetail }) {
           </div>
         </div>
       </div>
+
+      {app.auto_closed && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/50 px-4 py-3 text-sm"
+        >
+          <p className="flex items-center gap-2">
+            <Bot className="size-4 text-muted-foreground" aria-hidden />
+            Closed automatically after no response.{' '}
+            <span className="text-muted-foreground">{app.history.at(-1)?.note}</span>
+          </p>
+          <Button variant="outline" size="sm" onClick={doUndo} disabled={undo.isPending}>
+            <Undo2 data-icon="inline-start" />
+            Undo
+          </Button>
+        </div>
+      )}
 
       <form onSubmit={save} noValidate className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

@@ -49,6 +49,13 @@ TERMINAL_STATUSES: frozenset[Status] = frozenset(
     s for s, g in STATUS_GROUPS.items() if g.name.startswith("CLOSED")
 )
 
+# Statuses the auto-close rule may apply to (PLAN.md §6). Later stages always need a person.
+AUTO_CLOSE_ALLOWED_STATUSES: tuple[Status, ...] = (
+    Status.APPLIED,
+    Status.SCREENING,
+    Status.INTERVIEWING,
+)
+
 
 class WorkMode(StrEnum):
     REMOTE = "remote"

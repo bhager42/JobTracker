@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from app.clock import get_clock
 from app.config import Settings
 from app.main import create_app
 
@@ -42,7 +41,5 @@ def clock() -> FrozenClock:
 
 @pytest.fixture
 def client(settings: Settings, clock: FrozenClock) -> Iterator[TestClient]:
-    app = create_app(settings)
-    app.dependency_overrides[get_clock] = lambda: clock
-    with TestClient(app) as c:
+    with TestClient(create_app(settings, clock=clock)) as c:
         yield c

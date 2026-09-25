@@ -14,6 +14,7 @@ import {
 import { useState } from 'react'
 
 import type { Application } from '@/api/applications'
+import { AutoCloseHint, AutoClosedIcon } from '@/components/auto-close-hint'
 import { StatusBadge } from '@/components/status-badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { SortField } from '@/lib/applications-search'
@@ -87,7 +88,16 @@ const COLUMNS: ColumnDef<Features, Application>[] = [
   {
     id: 'status',
     cell: ({ row }) => (
-      <StatusBadge status={row.original.status} interviewRounds={row.original.interview_rounds} />
+      <div className="flex flex-col items-start gap-1">
+        <div className="flex items-center gap-1.5">
+          <StatusBadge
+            status={row.original.status}
+            interviewRounds={row.original.interview_rounds}
+          />
+          {row.original.auto_closed && <AutoClosedIcon />}
+        </div>
+        <AutoCloseHint autoCloseAt={row.original.auto_close_at} />
+      </div>
     ),
     meta: { label: 'Status', sortField: 'status' },
   },

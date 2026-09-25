@@ -1,6 +1,25 @@
 {
   "components": {
     "schemas": {
+      "AboutOut": {
+        "properties": {
+          "build_sha": {
+            "title": "Build Sha",
+            "type": "string"
+          },
+          "data_dir": {
+            "title": "Data Dir",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": ["version", "build_sha", "data_dir"],
+        "title": "AboutOut",
+        "type": "object"
+      },
       "ApplicationCreate": {
         "additionalProperties": false,
         "properties": {
@@ -216,8 +235,27 @@
             "title": "Archived",
             "type": "boolean"
           },
+          "auto_close_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the auto-close rule will close this application, if it applies.",
+            "title": "Auto Close At"
+          },
           "auto_close_exempt": {
             "title": "Auto Close Exempt",
+            "type": "boolean"
+          },
+          "auto_closed": {
+            "default": false,
+            "description": "Closed as Not Selected by automation; can be undone.",
+            "title": "Auto Closed",
             "type": "boolean"
           },
           "company": {
@@ -434,6 +472,8 @@
           "archived",
           "created_at",
           "updated_at",
+          "auto_closed",
+          "auto_close_at",
           "history",
           "documents"
         ],
@@ -446,8 +486,27 @@
             "title": "Archived",
             "type": "boolean"
           },
+          "auto_close_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the auto-close rule will close this application, if it applies.",
+            "title": "Auto Close At"
+          },
           "auto_close_exempt": {
             "title": "Auto Close Exempt",
+            "type": "boolean"
+          },
+          "auto_closed": {
+            "default": false,
+            "description": "Closed as Not Selected by automation; can be undone.",
+            "title": "Auto Closed",
             "type": "boolean"
           },
           "company": {
@@ -649,7 +708,9 @@
           "job_description",
           "archived",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "auto_closed",
+          "auto_close_at"
         ],
         "title": "ApplicationOut",
         "type": "object"
@@ -915,6 +976,102 @@
           }
         },
         "title": "ApplicationUpdate",
+        "type": "object"
+      },
+      "AutoCloseRunResult": {
+        "properties": {
+          "application_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Application Ids",
+            "type": "array"
+          },
+          "closed": {
+            "title": "Closed",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": ["enabled", "closed", "application_ids"],
+        "title": "AutoCloseRunResult",
+        "type": "object"
+      },
+      "AutoCloseSettings": {
+        "properties": {
+          "days": {
+            "default": 30,
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "type": "integer"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "statuses": {
+            "default": ["applied"],
+            "items": {
+              "$ref": "#/components/schemas/Status"
+            },
+            "minItems": 1,
+            "title": "Statuses",
+            "type": "array"
+          }
+        },
+        "required": ["enabled", "days", "statuses"],
+        "title": "AutoCloseSettings",
+        "type": "object"
+      },
+      "AutoCloseSettingsUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "statuses": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Status"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statuses"
+          }
+        },
+        "title": "AutoCloseSettingsUpdate",
         "type": "object"
       },
       "Body_upload_document_api_documents_post": {
@@ -1344,6 +1501,41 @@
         "title": "Problem",
         "type": "object"
       },
+      "SettingsOut": {
+        "properties": {
+          "auto_close": {
+            "$ref": "#/components/schemas/AutoCloseSettings"
+          },
+          "auto_close_allowed_statuses": {
+            "default": ["applied", "screening", "interviewing"],
+            "items": {
+              "$ref": "#/components/schemas/Status"
+            },
+            "title": "Auto Close Allowed Statuses",
+            "type": "array"
+          }
+        },
+        "required": ["auto_close", "auto_close_allowed_statuses"],
+        "title": "SettingsOut",
+        "type": "object"
+      },
+      "SettingsUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "auto_close": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AutoCloseSettingsUpdate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "SettingsUpdate",
+        "type": "object"
+      },
       "Source": {
         "enum": ["linkedin", "indeed", "referral", "company_site", "recruiter", "other"],
         "title": "Source",
@@ -1496,6 +1688,25 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/about": {
+      "get": {
+        "operationId": "about_api_about_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "About",
+        "tags": ["settings"]
+      }
+    },
     "/api/applications": {
       "get": {
         "operationId": "list_applications_api_applications_get",
@@ -2175,6 +2386,90 @@
         "tags": ["applications"]
       }
     },
+    "/api/applications/{app_id}/undo-auto-close": {
+      "post": {
+        "description": "Restores the status from before an auto-close and restarts its clock.",
+        "operationId": "undo_auto_close_api_applications__app_id__undo_auto_close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "title": "App Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Undo Auto Close",
+        "tags": ["applications"]
+      }
+    },
+    "/api/automation/auto-close/run": {
+      "post": {
+        "description": "Runs the auto-close rule now (it also runs at startup and hourly). Respects the\nenabled toggle: when auto-close is off, nothing is closed.",
+        "operationId": "run_auto_close_now_api_automation_auto_close_run_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoCloseRunResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run Auto Close Now",
+        "tags": ["settings"]
+      }
+    },
     "/api/documents": {
       "get": {
         "operationId": "list_documents_api_documents_get",
@@ -2503,6 +2798,63 @@
         },
         "summary": "Health",
         "tags": ["health"]
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "operationId": "get_app_settings_api_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get App Settings",
+        "tags": ["settings"]
+      },
+      "patch": {
+        "operationId": "update_app_settings_api_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Update App Settings",
+        "tags": ["settings"]
       }
     }
   }

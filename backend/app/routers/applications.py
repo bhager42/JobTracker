@@ -15,18 +15,43 @@ from app.schemas import (
     ApplicationOut,
     ApplicationPage,
     ApplicationUpdate,
+    AutoCloseSettings,
     BulkAction,
     BulkResult,
     DocumentLinks,
     StatusChange,
 )
 from app.services import applications as svc
+from app.services import auto_close
 from app.services import documents as doc_svc
+from app.services.app_settings import load_auto_close
 
 router = APIRouter(prefix="/api/applications", tags=["applications"], responses=PROBLEM_RESPONSES)
 
 SessionDep = Annotated[Session, Depends(get_session)]
 ClockDep = Annotated[Clock, Depends(get_clock)]
+
+
+def _auto_close_settings(session: SessionDep) -> AutoCloseSettings:
+    return load_auto_close(session)
+
+
+AutoCloseDep = Annotated[AutoCloseSettings, Depends(_auto_close_settings)]
+
+
+def _out(app: Application, cfg: AutoCloseSettings) -> ApplicationOut:
+    out = ApplicationOut.model_validate(app)
+    out.auto_close_at = auto_close.auto_close_at(app, cfg)
+    return out
+
+
+def _detail(session: Session, app: Application, cfg: AutoCloseSettings) -> ApplicationDetail:
+    # The latest-change source is a SQL expression loaded with the row; reload it in case
+    # this request just changed the status.
+    session.refresh(app, attribute_names=["last_change_source"])
+    out = ApplicationDetail.model_validate(app)
+    out.auto_close_at = auto_close.auto_close_at(app, cfg)
+    return out
 
 
 def _get_or_404(session: Session, app_id: int) -> Application:
@@ -43,6 +68,7 @@ def _get_or_404(session: Session, app_id: int) -> Application:
 @router.get("")
 def list_applications(
     session: SessionDep,
+    cfg: AutoCloseDep,
     status: Annotated[list[Status] | None, Query()] = None,
     q: Annotated[str | None, Query(max_length=200)] = None,
     source: Annotated[list[Source] | None, Query()] = None,
@@ -65,7 +91,7 @@ def list_applications(
     )
     items, total = svc.list_applications(session, filters, sort, page, page_size)
     return ApplicationPage(
-        items=[ApplicationOut.model_validate(a) for a in items],
+        items=[_out(a, cfg) for a in items],
         total=total,
         page=page,
         page_size=page_size,
@@ -74,31 +100,31 @@ def list_applications(
 
 @router.post("", status_code=201)
 def create_application(
-    data: ApplicationCreate, session: SessionDep, clock: ClockDep
+    data: ApplicationCreate, session: SessionDep, clock: ClockDep, cfg: AutoCloseDep
 ) -> ApplicationDetail:
     try:
         app = svc.create_application(session, data, clock())
     except doc_svc.UnknownDocuments as exc:
         raise HTTPException(422, str(exc)) from exc
     session.refresh(app, attribute_names=["documents"])
-    return ApplicationDetail.model_validate(app)
+    return _detail(session, app, cfg)
 
 
 @router.get("/{app_id}")
-def get_application(app_id: int, session: SessionDep) -> ApplicationDetail:
-    return ApplicationDetail.model_validate(_get_or_404(session, app_id))
+def get_application(app_id: int, session: SessionDep, cfg: AutoCloseDep) -> ApplicationDetail:
+    return _detail(session, _get_or_404(session, app_id), cfg)
 
 
 @router.patch("/{app_id}")
 def update_application(
-    app_id: int, data: ApplicationUpdate, session: SessionDep, clock: ClockDep
+    app_id: int, data: ApplicationUpdate, session: SessionDep, clock: ClockDep, cfg: AutoCloseDep
 ) -> ApplicationDetail:
     app = _get_or_404(session, app_id)
     try:
         svc.update_application(session, app, data, clock())
     except svc.ValidationFailed as exc:
         raise HTTPException(422, str(exc)) from exc
-    return ApplicationDetail.model_validate(app)
+    return _detail(session, app, cfg)
 
 
 @router.delete("/{app_id}", status_code=204)
@@ -110,7 +136,7 @@ def delete_application(app_id: int, session: SessionDep) -> Response:
 
 @router.post("/{app_id}/status")
 def change_status(
-    app_id: int, data: StatusChange, session: SessionDep, clock: ClockDep
+    app_id: int, data: StatusChange, session: SessionDep, clock: ClockDep, cfg: AutoCloseDep
 ) -> ApplicationDetail:
     app = _get_or_404(session, app_id)
     svc.change_status(
@@ -121,11 +147,26 @@ def change_status(
         interview_rounds=data.interview_rounds,
     )
     session.commit()
-    return ApplicationDetail.model_validate(app)
+    return _detail(session, app, cfg)
+
+
+@router.post("/{app_id}/undo-auto-close")
+def undo_auto_close(
+    app_id: int, session: SessionDep, clock: ClockDep, cfg: AutoCloseDep
+) -> ApplicationDetail:
+    """Restores the status from before an auto-close and restarts its clock."""
+    app = _get_or_404(session, app_id)
+    try:
+        auto_close.undo_auto_close(session, app, clock())
+    except auto_close.NotAutoClosed as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return _detail(session, app, cfg)
 
 
 @router.put("/{app_id}/documents")
-def set_documents(app_id: int, data: DocumentLinks, session: SessionDep) -> ApplicationDetail:
+def set_documents(
+    app_id: int, data: DocumentLinks, session: SessionDep, cfg: AutoCloseDep
+) -> ApplicationDetail:
     """Replaces the attached documents with exactly `document_ids`."""
     app = _get_or_404(session, app_id)
     before = list(app.documents)
@@ -136,7 +177,7 @@ def set_documents(app_id: int, data: DocumentLinks, session: SessionDep) -> Appl
     session.commit()
     session.refresh(app, attribute_names=["documents"])  # reload in display order
     doc_svc.refresh_counts(session, [*before, *app.documents])
-    return ApplicationDetail.model_validate(app)
+    return _detail(session, app, cfg)
 
 
 @router.post("/bulk")

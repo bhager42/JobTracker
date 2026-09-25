@@ -1,4 +1,4 @@
-import { format, formatDistanceToNowStrict, parseISO } from 'date-fns'
+import { format, formatDistanceStrict, parseISO } from 'date-fns'
 
 /** Today as a plain `YYYY-MM-DD` date in the browser's time zone. */
 export function todayISO(now: Date = new Date()): string {
@@ -22,5 +22,30 @@ export function formatDateTime(value: string): string {
 export function formatRelative(value: string, now: Date = new Date()): string {
   const then = parseISO(value)
   if (Math.abs(now.getTime() - then.getTime()) < 60_000) return 'just now'
-  return formatDistanceToNowStrict(then, { addSuffix: true })
+  return formatDistanceStrict(then, now, { addSuffix: true })
+}
+
+export interface AutoCloseCountdown {
+  /** Whole days left, rounded up; 0 means it closes on the next hourly run. */
+  days: number
+  /** Close enough (7 days or fewer) to show as a warning. */
+  soon: boolean
+  label: string
+}
+
+/** "Auto-closes in X days" for an application's `auto_close_at`, or null if it won't. */
+export function autoCloseCountdown(
+  autoCloseAt: string | null | undefined,
+  now: Date = new Date(),
+): AutoCloseCountdown | null {
+  if (!autoCloseAt) return null
+  const ms = parseISO(autoCloseAt).getTime() - now.getTime()
+  const days = Math.max(0, Math.ceil(ms / 86_400_000))
+  const label =
+    days === 0
+      ? 'Auto-closes within the hour'
+      : days === 1
+        ? 'Auto-closes in 1 day'
+        : `Auto-closes in ${days} days`
+  return { days, soon: days <= 7, label }
 }

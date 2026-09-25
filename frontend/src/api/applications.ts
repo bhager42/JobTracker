@@ -97,3 +97,16 @@ export function useBulkAction() {
     onSuccess: () => client.invalidateQueries({ queryKey: keys.all }),
   })
 }
+
+export function useUndoAutoClose(id: number) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      unwrap(
+        api.POST('/api/applications/{app_id}/undo-auto-close', {
+          params: { path: { app_id: id } },
+        }),
+      ),
+    onSuccess: (app) => onDetailChanged(client, app),
+  })
+}

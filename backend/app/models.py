@@ -24,7 +24,14 @@ from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from app.db import Base
 from app.enums import DocumentKind, EmploymentType, HistorySource, Source, Status, WorkMode
 
-__all__ = ["Application", "Base", "Document", "StatusHistory", "application_documents"]
+__all__ = [
+    "AppSetting",
+    "Application",
+    "Base",
+    "Document",
+    "StatusHistory",
+    "application_documents",
+]
 
 
 class UTCDateTime(TypeDecorator[datetime]):
@@ -52,6 +59,22 @@ def _enum_column(enum: type[Any]) -> String:
     # Plain TEXT columns: enum values are validated by Pydantic, and adding a status later
     # then needs no table rebuild.
     return String(max(len(e.value) for e in enum))
+
+
+class StatusHistory(Base):
+    __tablename__ = "status_history"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    application_id: Mapped[int] = mapped_column(
+        ForeignKey("applications.id", ondelete="CASCADE"), index=True
+    )
+    from_status: Mapped[Status | None] = mapped_column(_enum_column(Status))
+    to_status: Mapped[Status] = mapped_column(_enum_column(Status))
+    changed_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    source: Mapped[HistorySource] = mapped_column(_enum_column(HistorySource))
+    note: Mapped[str | None] = mapped_column(Text)
+
+    application: Mapped["Application"] = relationship(back_populates="history")
 
 
 # Many-to-many: deleting an application drops its links; a linked document can't be deleted.
@@ -101,7 +124,17 @@ class Application(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime)
 
-    history: Mapped[list["StatusHistory"]] = relationship(
+    # Who made the latest status change, so list views can mark auto-closed applications
+    # without loading every history row.
+    last_change_source: Mapped[HistorySource | None] = column_property(
+        select(StatusHistory.source)
+        .where(StatusHistory.application_id == id)
+        .order_by(StatusHistory.changed_at.desc(), StatusHistory.id.desc())
+        .limit(1)
+        .correlate_except(StatusHistory)
+        .scalar_subquery()
+    )
+    history: Mapped[list[StatusHistory]] = relationship(
         back_populates="application",
         cascade="all, delete-orphan",
         passive_deletes=True,
@@ -114,21 +147,13 @@ class Application(Base):
         order_by="Document.kind, Document.display_name",
     )
 
-
-class StatusHistory(Base):
-    __tablename__ = "status_history"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    application_id: Mapped[int] = mapped_column(
-        ForeignKey("applications.id", ondelete="CASCADE"), index=True
-    )
-    from_status: Mapped[Status | None] = mapped_column(_enum_column(Status))
-    to_status: Mapped[Status] = mapped_column(_enum_column(Status))
-    changed_at: Mapped[datetime] = mapped_column(UTCDateTime)
-    source: Mapped[HistorySource] = mapped_column(_enum_column(HistorySource))
-    note: Mapped[str | None] = mapped_column(Text)
-
-    application: Mapped[Application] = relationship(back_populates="history")
+    @property
+    def auto_closed(self) -> bool:
+        """Closed by the auto-close rule (and not changed since), so it can be undone."""
+        return (
+            self.status == Status.NOT_SELECTED
+            and self.last_change_source == HistorySource.AUTOMATION
+        )
 
 
 class Document(Base):
@@ -160,3 +185,12 @@ class Document(Base):
         passive_deletes=True,
         order_by="Application.company, Application.id",
     )
+
+
+class AppSetting(Base):
+    """User settings as key/value rows; values are JSON. Typed by `services/app_settings.py`."""
+
+    __tablename__ = "settings"
+
+    key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
