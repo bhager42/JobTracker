@@ -22,7 +22,7 @@ services:
       - /mnt/tank/apps/jobtracker:/data
       # Option B: a named volume that TrueNAS keeps in its ix-apps dataset. Use this line
       # instead of the one above, and uncomment the top-level `volumes:` block at the end.
-      # - jobtracker-data:/data
+      # - jobtracker:/data
     read_only: true
     tmpfs:
       - /tmp
@@ -30,6 +30,6 @@ services:
     security_opt:
       - no-new-privileges:true
 
-# Option B only:
+# Option B only (required with the named volume above, or compose reports an undefined volume):
 # volumes:
-#   jobtracker-data:
+#   jobtracker:

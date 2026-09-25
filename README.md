@@ -27,7 +27,7 @@ New GHCR packages are often private. Either make the package public (GitHub → 
 
 The dataset must be local ZFS, not an NFS or SMB share, because SQLite's write-ahead log is unsafe on network filesystems.
 
-**Option B: a named volume (no dataset to create).** TrueNAS keeps it inside its hidden apps dataset (`<pool>/ix-apps`), like the ixVolume storage in its app forms. There's nothing to set up: a new volume takes its owner (568:568) from the image. In the YAML, use the commented `jobtracker-data` lines instead of the `/mnt/...` path. The trade-offs:
+**Option B: a named volume (no dataset to create).** TrueNAS keeps it inside its hidden apps dataset (`<pool>/ix-apps`), like the ixVolume storage in its app forms. There's nothing to set up: a new volume takes its owner (568:568) from the image. In the YAML, use the commented `jobtracker` volume line instead of the `/mnt/...` path, and uncomment the `volumes:` block at the end of the file too. The trade-offs:
 
 - Snapshots have to cover the whole `ix-apps` dataset, and rolling it back rolls back every app, not just this one.
 - Deleting the app in TrueNAS can delete the volume along with it, so download a backup first (see [Backups](#backups)).
