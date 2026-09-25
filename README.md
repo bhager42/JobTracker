@@ -18,19 +18,26 @@ CI builds the image and pushes it to the GitHub Container Registry (see [Releasi
 
 New GHCR packages are often private. Either make the package public (GitHub → your profile → Packages → `jobtracker` → Package settings → Change visibility), or add a `ghcr.io` credential (a token with `read:packages`) to TrueNAS's container registry settings so it can pull a private image.
 
-### 2. Create a dataset
+### 2. Choose where the data lives
+
+**Option A: your own dataset (recommended).** It's easy to snapshot, roll back, and keep if you delete the app.
 
 1. **Datasets → Add Dataset.** Create, for example, `tank/apps/jobtracker` using the **Apps** preset.
 2. **Edit Permissions** on the dataset. Give the `apps` user and group (UID/GID **568**) read and write access. The container runs as 568:568 and never as root.
 
 The dataset must be local ZFS, not an NFS or SMB share, because SQLite's write-ahead log is unsafe on network filesystems.
 
+**Option B: a named volume (no dataset to create).** TrueNAS keeps it inside its hidden apps dataset (`<pool>/ix-apps`), like the ixVolume storage in its app forms. There's nothing to set up: a new volume takes its owner (568:568) from the image. In the YAML, use the commented `jobtracker-data` lines instead of the `/mnt/...` path. The trade-offs:
+
+- Snapshots have to cover the whole `ix-apps` dataset, and rolling it back rolls back every app, not just this one.
+- Deleting the app in TrueNAS can delete the volume along with it, so download a backup first (see [Backups](#backups)).
+
 ### 3. Install the app
 
 **Apps → Discover Apps → ⋮ → Install via YAML.** Name it `jobtracker` and paste [deploy/truenas-app.yaml](deploy/truenas-app.yaml). Then change:
 
 - `image` to your GHCR path. A version tag such as `:0.1.0` is safer than `:latest`.
-- the dataset path under `volumes`
+- under `volumes`, the dataset path (Option A), or switch to the named volume (Option B)
 - `TZ` to your time zone. It decides what "today" and "this week" mean.
 - `ALLOWED_HOSTS` to every name and IP you'll use to open the app, e.g. `truenas.local,192.168.1.10`. See [Security](#security).
 
@@ -43,18 +50,20 @@ The app has no login by default, which suits a trusted home network. To require 
 1. Put the password in a file in the dataset, e.g. `/mnt/tank/apps/jobtracker/password.txt`, owned by 568 with mode `600`.
 2. Add `AUTH_PASSWORD_FILE: /data/password.txt` to the app's `environment`. `AUTH_PASSWORD` works too, but the value is then visible in the app's configuration.
 
+With a named volume (Option B) there's no host folder to put the file in, so use `AUTH_PASSWORD`.
+
 Sessions last 30 days. Changing the password signs everyone out.
 
 ## Backups
 
-Everything lives in the dataset: the database (`jobtracker.db`, plus `-wal` and `-shm` while running) and `uploads/`.
+Everything lives in `/data`: the database (`jobtracker.db`, plus `-wal` and `-shm` while running) and `uploads/`. That's your dataset (Option A) or the named volume (Option B).
 
-- **ZFS snapshots (recommended):** **Data Protection → Periodic Snapshot Tasks → Add** on the dataset, e.g. daily, kept for 30 days. Snapshots are safe while the app runs. SQLite's write-ahead log makes a snapshot a consistent point in time.
+- **ZFS snapshots (recommended):** **Data Protection → Periodic Snapshot Tasks → Add** on the dataset, e.g. daily, kept for 30 days. With a named volume, the task has to cover `<pool>/ix-apps` recursively. Snapshots are safe while the app runs. SQLite's write-ahead log makes a snapshot a consistent point in time.
 - **In-app backup:** **Settings → Data → Download backup** gives a ZIP of all applications, history, documents, and settings. It includes a CSV you can open in a spreadsheet.
 
 ### Restoring
 
-- **From a snapshot:** stop the app (**Apps → jobtracker → Stop**), roll the dataset back (**Datasets → the dataset → Snapshots → Rollback**), then start the app.
+- **From a snapshot:** stop the app (**Apps → jobtracker → Stop**), roll the dataset back (**Datasets → the dataset → Snapshots → Rollback**), then start the app. With a named volume, this rolls back `ix-apps` and so every app; restoring a backup ZIP only touches JobTracker.
 - **From a backup ZIP:** install JobTracker fresh, then use **Settings → Data → Restore from backup**. On an empty instance this brings everything back exactly, including ids and settings. On one with data, it adds the backup alongside what's there.
 
 ## Updating

@@ -18,10 +18,18 @@ services:
       # AUTH_PASSWORD_FILE: /data/password.txt
       # AUTH_PASSWORD: "choose-a-long-passphrase"
     volumes:
+      # Option A (recommended): your own dataset, writable by 568:568.
       - /mnt/tank/apps/jobtracker:/data
+      # Option B: a named volume that TrueNAS keeps in its ix-apps dataset. Use this line
+      # instead of the one above, and uncomment the top-level `volumes:` block at the end.
+      # - jobtracker-data:/data
     read_only: true
     tmpfs:
       - /tmp
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
+
+# Option B only:
+# volumes:
+#   jobtracker-data:
