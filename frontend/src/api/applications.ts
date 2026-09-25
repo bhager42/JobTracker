@@ -45,10 +45,19 @@ export function useApplication(id: number) {
   })
 }
 
-/** Store a fresh detail response and refetch every list, since any field can move a row. */
+/**
+ * Store a fresh detail response, then refetch everything else derived from applications:
+ * lists, the board, the dashboard, metrics, and stats all live under the `applications`
+ * key. The detail just returned by the server is already current, so it's skipped.
+ */
 function onDetailChanged(client: QueryClient, app: ApplicationDetail) {
   client.setQueryData(keys.detail(app.id), app)
-  return client.invalidateQueries({ queryKey: ['applications', 'list'] })
+  const fresh = keys.detail(app.id)
+  return client.invalidateQueries({
+    queryKey: keys.all,
+    predicate: (q) =>
+      q.queryKey.length !== fresh.length || q.queryKey.some((k, i) => k !== fresh[i]),
+  })
 }
 
 export function useCreateApplication() {
@@ -86,7 +95,7 @@ export function useDeleteApplication() {
       unwrap(api.DELETE('/api/applications/{app_id}', { params: { path: { app_id: id } } })),
     onSuccess: (_data, id) => {
       client.removeQueries({ queryKey: keys.detail(id) })
-      return client.invalidateQueries({ queryKey: ['applications', 'list'] })
+      return client.invalidateQueries({ queryKey: keys.all })
     },
   })
 }
