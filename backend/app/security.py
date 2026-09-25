@@ -26,7 +26,7 @@ class BodySizeLimitMiddleware:
 
     Checking while streaming (not just `Content-Length`) matters: without it, a chunked or
     lying request would be spooled to disk in full before the upload handler saw it.
-    Upload paths get a larger limit; everything else is JSON and stays small.
+    Upload paths get their own limits; everything else is JSON and stays small.
     """
 
     def __init__(
@@ -34,20 +34,18 @@ class BodySizeLimitMiddleware:
         app: ASGIApp,
         *,
         default_limit: int,
-        upload_limit: int,
-        upload_paths: frozenset[str],
+        upload_limits: dict[str, int],
     ) -> None:
         self.app = app
         self.default_limit = default_limit
-        self.upload_limit = upload_limit
-        self.upload_paths = upload_paths
+        self.upload_limits = upload_limits
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
 
-        limit = self.upload_limit if scope["path"] in self.upload_paths else self.default_limit
+        limit = self.upload_limits.get(scope["path"], self.default_limit)
         for name, value in scope.get("headers", []):
             if name == b"content-length":
                 try:

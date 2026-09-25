@@ -14,6 +14,13 @@ export function RootLayout() {
     <TooltipProvider>
       <AuthGate>
         <AppCommandsProvider>
+          {/* First Tab stop: lets keyboard users jump past the sidebar and top bar. */}
+          <a
+            href="#main"
+            className="sr-only z-50 rounded-md border bg-background px-3 py-2 text-sm font-medium shadow focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+          >
+            Skip to content
+          </a>
           <SidebarProvider>
             <AppSidebar />
             <SidebarInset className="min-w-0">
@@ -25,7 +32,11 @@ export function RootLayout() {
                 <ThemeToggle />
               </header>
               {/* min-w-0 lets wide children (the board) scroll inside instead of widening the page. */}
-              <main className="mx-auto w-full max-w-7xl min-w-0 flex-1 space-y-6 p-4 md:p-8">
+              <main
+                id="main"
+                tabIndex={-1}
+                className="mx-auto w-full max-w-7xl min-w-0 flex-1 space-y-6 p-4 outline-none md:p-8"
+              >
                 <Outlet />
               </main>
             </SidebarInset>

@@ -15,7 +15,7 @@ from app.config import Settings, get_settings
 from app.db import make_engine, make_session_factory
 from app.migrate import upgrade_to_head
 from app.problems import install_problem_handlers
-from app.routers import applications, dashboard, documents, health, metrics
+from app.routers import applications, dashboard, documents, health, io, metrics
 from app.routers import settings as settings_router
 from app.security import (
     BodySizeLimitMiddleware,
@@ -93,6 +93,7 @@ def create_app(
     app.include_router(dashboard.router)
     app.include_router(metrics.router)
     app.include_router(auth.router)
+    app.include_router(io.router)
 
     # Each add wraps the ones before it, so this runs outermost-last. Request order:
     # security headers → Host check → body limit → cross-site guard → sign-in → routes.
@@ -102,8 +103,12 @@ def create_app(
         BodySizeLimitMiddleware,
         default_limit=4 * 1024 * 1024,
         # The file itself is checked exactly in storage; this allows for multipart overhead.
-        upload_limit=(settings.max_upload_mb + 1) * 1024 * 1024,
-        upload_paths=frozenset({"/api/documents"}),
+        upload_limits={
+            "/api/documents": (settings.max_upload_mb + 1) * 1024 * 1024,
+            "/api/import/csv": (settings.max_upload_mb + 1) * 1024 * 1024,
+            "/api/import/csv/preview": (settings.max_upload_mb + 1) * 1024 * 1024,
+            "/api/import": (settings.max_import_mb + 1) * 1024 * 1024,
+        },
     )
     app.add_middleware(HostCheckMiddleware, allowed_hosts=settings.allowed_hosts)
     app.add_middleware(SecurityHeadersMiddleware)

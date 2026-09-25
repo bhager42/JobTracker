@@ -1,14 +1,25 @@
-import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+} from '@tanstack/react-router'
 
 import { NotFound, RootLayout } from '@/components/root-layout'
 import { validateApplicationsSearch } from '@/lib/applications-search'
 import { validateMetricsSearch } from '@/lib/metrics-search'
-import { ApplicationDetailPage } from '@/pages/application-detail'
 import { ApplicationsPage } from '@/pages/applications'
 import { DashboardPage } from '@/pages/dashboard'
-import { DocumentsPage } from '@/pages/documents'
-import { MetricsPage } from '@/pages/metrics'
-import { SettingsPage } from '@/pages/settings'
+
+// The dashboard and list load with the app; heavier pages (charts, markdown, uploads) load
+// on first visit.
+const MetricsPage = lazyRouteComponent(() => import('@/pages/metrics'), 'MetricsPage')
+const ApplicationDetailPage = lazyRouteComponent(
+  () => import('@/pages/application-detail'),
+  'ApplicationDetailPage',
+)
+const DocumentsPage = lazyRouteComponent(() => import('@/pages/documents'), 'DocumentsPage')
+const SettingsPage = lazyRouteComponent(() => import('@/pages/settings'), 'SettingsPage')
 
 const rootRoute = createRootRoute({ component: RootLayout, notFoundComponent: NotFound })
 

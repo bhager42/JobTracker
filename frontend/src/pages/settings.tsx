@@ -10,6 +10,7 @@ import {
   useUpdateAutoClose,
   type AppSettings,
 } from '@/api/settings'
+import { DataCard } from '@/components/data-card'
 import { FormField } from '@/components/form-field'
 import { PageHeader } from '@/components/page-header'
 import { useTheme, type Theme } from '@/components/theme-provider'
@@ -37,6 +38,7 @@ export function SettingsPage() {
           // Remount when saved values change so the form starts from them.
           <AutoCloseCard key={JSON.stringify(data.auto_close)} settings={data} />
         )}
+        <DataCard />
         <AppearanceCard />
         <AboutCard />
       </div>

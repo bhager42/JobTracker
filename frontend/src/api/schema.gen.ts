@@ -274,6 +274,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Export
+     * @description Everything as a ZIP: applications.json (for re-import), applications.csv, and files.
+     */
+    get: operations['export_api_export_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/health': {
     parameters: {
       query?: never
@@ -285,6 +305,67 @@ export interface paths {
     get: operations['health_api_health_get']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/import': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Import Export
+     * @description Restores a JobTracker export (.zip, or its applications.json). Into an empty instance
+     *     ids and settings come back exactly; otherwise records are added alongside what's there.
+     */
+    post: operations['import_export_api_import_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/import/csv': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Import Csv
+     * @description Imports the rows that pass validation; the rest are reported. `dry_run` only reports.
+     */
+    post: operations['import_csv_api_import_csv_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/import/csv/preview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Preview Csv
+     * @description Reads a CSV's columns and first rows, and suggests a column for each field.
+     */
+    post: operations['preview_csv_api_import_csv_preview_post']
     delete?: never
     options?: never
     head?: never
@@ -375,6 +456,23 @@ export interface paths {
     head?: never
     /** Update App Settings */
     patch: operations['update_app_settings_api_settings_patch']
+    trace?: never
+  }
+  '/api/stats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Stats */
+    get: operations['stats_api_stats_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
 }
@@ -698,6 +796,31 @@ export interface components {
       /** Statuses */
       statuses?: components['schemas']['Status'][] | null
     }
+    /** Body_import_csv_api_import_csv_post */
+    Body_import_csv_api_import_csv_post: {
+      /**
+       * Dry Run
+       * @default false
+       */
+      dry_run?: boolean
+      /** File */
+      file: string
+      /**
+       * Mapping
+       * @description JSON object: {"field": "CSV column", ...}
+       */
+      mapping: string
+    }
+    /** Body_import_export_api_import_post */
+    Body_import_export_api_import_post: {
+      /** File */
+      file: string
+    }
+    /** Body_preview_csv_api_import_csv_preview_post */
+    Body_preview_csv_api_import_csv_preview_post: {
+      /** File */
+      file: string
+    }
     /** Body_upload_document_api_documents_post */
     Body_upload_document_api_documents_post: {
       /** Display Name */
@@ -721,6 +844,53 @@ export interface components {
     BulkResult: {
       /** Affected */
       affected: number
+    }
+    /** CsvImportResult */
+    CsvImportResult: {
+      /**
+       * Created
+       * @description 0 on a dry run.
+       */
+      created: number
+      /** Errors */
+      errors: components['schemas']['CsvRowError'][]
+      /** Total */
+      total: number
+      /** Valid */
+      valid: number
+    }
+    /** CsvPreview */
+    CsvPreview: {
+      /**
+       * Fields
+       * @description Fields a column can map to.
+       */
+      fields: string[]
+      /** Headers */
+      headers: string[]
+      /** Required */
+      required: string[]
+      /** Row Count */
+      row_count: number
+      /** Sample Rows */
+      sample_rows: string[][]
+      /**
+       * Suggested Mapping
+       * @description Field → CSV column header.
+       */
+      suggested_mapping: {
+        [key: string]: string
+      }
+    }
+    /** CsvRowError */
+    CsvRowError: {
+      /** Message */
+      message: string
+      /**
+       * Row
+       * @description Line number in the file; the header is line 1.
+       */
+      row: number
     }
     /** DashboardKpis */
     DashboardKpis: {
@@ -755,6 +925,21 @@ export interface components {
       offers_awaiting_decision: components['schemas']['ApplicationOut'][]
       /** Recent Activity */
       recent_activity: components['schemas']['ActivityItem'][]
+    }
+    /** DataStats */
+    DataStats: {
+      /** Applications */
+      applications: number
+      /** Archived */
+      archived: number
+      /** Database Bytes */
+      database_bytes: number
+      /** Documents */
+      documents: number
+      /** History Entries */
+      history_entries: number
+      /** Uploads Bytes */
+      uploads_bytes: number
     }
     /** DocumentInUseProblem */
     DocumentInUseProblem: {
@@ -907,6 +1092,22 @@ export interface components {
      * @enum {string}
      */
     HistorySource: 'user' | 'automation' | 'import'
+    /** ImportResultOut */
+    ImportResultOut: {
+      /** Applications */
+      applications: number
+      /** Documents */
+      documents: number
+      /** Documents Missing */
+      documents_missing: number
+      /** Documents Reused */
+      documents_reused: number
+      /**
+       * Restored
+       * @description The instance was empty, so ids and settings were restored exactly.
+       */
+      restored: boolean
+    }
     /** LinkedApplication */
     LinkedApplication: {
       /** Company */
@@ -2041,6 +2242,26 @@ export interface operations {
       }
     }
   }
+  export_api_export_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description The backup ZIP. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/zip': unknown
+        }
+      }
+    }
+  }
   health_api_health_get: {
     parameters: {
       query?: never
@@ -2057,6 +2278,138 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HealthOut']
+        }
+      }
+    }
+  }
+  import_export_api_import_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_import_export_api_import_post']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ImportResultOut']
+        }
+      }
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  import_csv_api_import_csv_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_import_csv_api_import_csv_post']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CsvImportResult']
+        }
+      }
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  preview_csv_api_import_csv_preview_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_preview_csv_api_import_csv_preview_post']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CsvPreview']
+        }
+      }
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
         }
       }
     }
@@ -2256,6 +2609,26 @@ export interface operations {
         content: {
           'application/json': components['schemas']['Problem']
           'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  stats_api_stats_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DataStats']
         }
       }
     }

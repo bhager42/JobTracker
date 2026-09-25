@@ -15,7 +15,7 @@ export function SearchButton() {
     >
       <Search data-icon="inline-start" />
       <span className="flex-1 text-left">Search…</span>
-      <kbd className="pointer-events-none hidden rounded border bg-muted px-1.5 font-mono text-[10px] font-medium sm:inline">
+      <kbd className="pointer-events-none hidden rounded border bg-background px-1.5 font-mono text-[10px] font-medium text-foreground/80 sm:inline">
         {mac ? '⌘' : 'Ctrl'} K
       </kbd>
     </Button>

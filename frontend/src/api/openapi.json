@@ -1154,6 +1154,52 @@
         "title": "AutoCloseSettingsUpdate",
         "type": "object"
       },
+      "Body_import_csv_api_import_csv_post": {
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "mapping": {
+            "description": "JSON object: {\"field\": \"CSV column\", ...}",
+            "title": "Mapping",
+            "type": "string"
+          }
+        },
+        "required": ["file", "mapping"],
+        "title": "Body_import_csv_api_import_csv_post",
+        "type": "object"
+      },
+      "Body_import_export_api_import_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": ["file"],
+        "title": "Body_import_export_api_import_post",
+        "type": "object"
+      },
+      "Body_preview_csv_api_import_csv_preview_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": ["file"],
+        "title": "Body_preview_csv_api_import_csv_preview_post",
+        "type": "object"
+      },
       "Body_upload_document_api_documents_post": {
         "properties": {
           "display_name": {
@@ -1222,6 +1268,107 @@
         },
         "required": ["affected"],
         "title": "BulkResult",
+        "type": "object"
+      },
+      "CsvImportResult": {
+        "properties": {
+          "created": {
+            "description": "0 on a dry run.",
+            "title": "Created",
+            "type": "integer"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/CsvRowError"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "integer"
+          }
+        },
+        "required": ["total", "valid", "created", "errors"],
+        "title": "CsvImportResult",
+        "type": "object"
+      },
+      "CsvPreview": {
+        "properties": {
+          "fields": {
+            "description": "Fields a column can map to.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "headers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "required": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required",
+            "type": "array"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sample_rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Sample Rows",
+            "type": "array"
+          },
+          "suggested_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Field \u2192 CSV column header.",
+            "title": "Suggested Mapping",
+            "type": "object"
+          }
+        },
+        "required": [
+          "headers",
+          "sample_rows",
+          "row_count",
+          "suggested_mapping",
+          "fields",
+          "required"
+        ],
+        "title": "CsvPreview",
+        "type": "object"
+      },
+      "CsvRowError": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "row": {
+            "description": "Line number in the file; the header is line 1.",
+            "title": "Row",
+            "type": "integer"
+          }
+        },
+        "required": ["row", "message"],
+        "title": "CsvRowError",
         "type": "object"
       },
       "DashboardKpis": {
@@ -1308,6 +1455,44 @@
         },
         "required": ["kpis", "auto_closing_soon", "offers_awaiting_decision", "recent_activity"],
         "title": "DashboardOut",
+        "type": "object"
+      },
+      "DataStats": {
+        "properties": {
+          "applications": {
+            "title": "Applications",
+            "type": "integer"
+          },
+          "archived": {
+            "title": "Archived",
+            "type": "integer"
+          },
+          "database_bytes": {
+            "title": "Database Bytes",
+            "type": "integer"
+          },
+          "documents": {
+            "title": "Documents",
+            "type": "integer"
+          },
+          "history_entries": {
+            "title": "History Entries",
+            "type": "integer"
+          },
+          "uploads_bytes": {
+            "title": "Uploads Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "applications",
+          "archived",
+          "documents",
+          "history_entries",
+          "database_bytes",
+          "uploads_bytes"
+        ],
+        "title": "DataStats",
         "type": "object"
       },
       "DocumentInUseProblem": {
@@ -1651,6 +1836,40 @@
         "enum": ["user", "automation", "import"],
         "title": "HistorySource",
         "type": "string"
+      },
+      "ImportResultOut": {
+        "properties": {
+          "applications": {
+            "title": "Applications",
+            "type": "integer"
+          },
+          "documents": {
+            "title": "Documents",
+            "type": "integer"
+          },
+          "documents_missing": {
+            "title": "Documents Missing",
+            "type": "integer"
+          },
+          "documents_reused": {
+            "title": "Documents Reused",
+            "type": "integer"
+          },
+          "restored": {
+            "description": "The instance was empty, so ids and settings were restored exactly.",
+            "title": "Restored",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "restored",
+          "applications",
+          "documents",
+          "documents_reused",
+          "documents_missing"
+        ],
+        "title": "ImportResultOut",
+        "type": "object"
       },
       "LinkedApplication": {
         "properties": {
@@ -3427,6 +3646,22 @@
         "tags": ["documents"]
       }
     },
+    "/api/export": {
+      "get": {
+        "description": "Everything as a ZIP: applications.json (for re-import), applications.csv, and files.",
+        "operationId": "export_api_export_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {}
+            },
+            "description": "The backup ZIP."
+          }
+        },
+        "summary": "Export",
+        "tags": ["data"]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "health_api_health_get",
@@ -3444,6 +3679,162 @@
         },
         "summary": "Health",
         "tags": ["health"]
+      }
+    },
+    "/api/import": {
+      "post": {
+        "description": "Restores a JobTracker export (.zip, or its applications.json). Into an empty instance\nids and settings come back exactly; otherwise records are added alongside what's there.",
+        "operationId": "import_export_api_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_export_api_import_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Import Export",
+        "tags": ["data"]
+      }
+    },
+    "/api/import/csv": {
+      "post": {
+        "description": "Imports the rows that pass validation; the rest are reported. `dry_run` only reports.",
+        "operationId": "import_csv_api_import_csv_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_csv_api_import_csv_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvImportResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Import Csv",
+        "tags": ["data"]
+      }
+    },
+    "/api/import/csv/preview": {
+      "post": {
+        "description": "Reads a CSV's columns and first rows, and suggests a column for each field.",
+        "operationId": "preview_csv_api_import_csv_preview_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_preview_csv_api_import_csv_preview_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              },
+              "application/problem+json": {}
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Preview Csv",
+        "tags": ["data"]
       }
     },
     "/api/metrics/by-source": {
@@ -4004,6 +4395,25 @@
         },
         "summary": "Update App Settings",
         "tags": ["settings"]
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "operationId": "stats_api_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Stats",
+        "tags": ["data"]
       }
     }
   }

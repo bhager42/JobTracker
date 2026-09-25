@@ -8,3 +8,6 @@ frontend/dist
 .data
 .git
 .env
+frontend/.e2e-data
+frontend/test-results
+frontend/playwright-report

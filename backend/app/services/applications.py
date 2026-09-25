@@ -54,7 +54,14 @@ def change_status(
     return True
 
 
-def create_application(session: Session, data: ApplicationCreate, now: datetime) -> Application:
+def create_application(
+    session: Session,
+    data: ApplicationCreate,
+    now: datetime,
+    *,
+    history_source: HistorySource = HistorySource.USER,
+    commit: bool = True,
+) -> Application:
     fields = data.model_dump(exclude={"status", "document_ids"})
     if data.status != Status.SAVED and fields["date_applied"] is None:
         fields["date_applied"] = local_date(now)
@@ -67,13 +74,14 @@ def create_application(session: Session, data: ApplicationCreate, now: datetime)
     )
     app.history.append(
         StatusHistory(
-            from_status=None, to_status=data.status, changed_at=now, source=HistorySource.USER
+            from_status=None, to_status=data.status, changed_at=now, source=history_source
         )
     )
     session.add(app)
     if data.document_ids:
         set_application_documents(session, app, data.document_ids)
-    session.commit()
+    if commit:
+        session.commit()
     return app
 
 

@@ -17,6 +17,7 @@ JobTracker is a self-hosted, single-user job application tracker. It ships as on
 - `make install`: `uv sync` + `pnpm install`
 - `make dev`: backend on :8000 (uvicorn --reload, data in `./.data`) + Vite on :5173 proxying `/api`
 - `make test`: pytest + vitest
+- `make e2e`: Playwright smoke, board, phone-width, and axe accessibility tests against the real app (throwaway data dir). The first time, run `pnpm exec playwright install chromium` in `frontend/`.
 - `make lint` / `make format`: ruff, mypy, oxlint, tsc, prettier
 - `make build` / `make run`: image build / prod-like run at http://localhost:8080 (uses docker, or podman if docker is absent)
 

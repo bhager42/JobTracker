@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -25,7 +25,6 @@ import { ApplicationsTable, ColumnToggle } from '@/components/applications-table
 import { useApplicationsTable } from '@/components/applications-table-model'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
-import { KanbanBoard } from '@/components/kanban-board'
 import { MultiSelectFilter } from '@/components/multi-select-filter'
 import { PageHeader } from '@/components/page-header'
 import { NewApplicationButton } from '@/components/new-application-button'
@@ -54,6 +53,11 @@ import {
 import { formatDate } from '@/lib/dates'
 import { SOURCE_LABELS, WORK_MODE_LABELS } from '@/lib/enums'
 import { STATUS_LABELS } from '@/lib/status'
+
+// The board (and its drag-and-drop library) loads only when someone switches to it.
+const KanbanBoard = lazy(() =>
+  import('@/components/kanban-board').then((m) => ({ default: m.KanbanBoard })),
+)
 
 type View = 'table' | 'board'
 const VIEW_KEY = 'jobtracker-applications-view'
@@ -211,7 +215,9 @@ export function ApplicationsPage() {
             action={<NewApplicationButton />}
           />
         ) : (
-          <KanbanBoard apps={board.data} query={boardQuery} />
+          <Suspense fallback={<TableSkeleton />}>
+            <KanbanBoard apps={board.data} query={boardQuery} />
+          </Suspense>
         )
       ) : (
         <>

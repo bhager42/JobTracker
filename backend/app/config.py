@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     allowed_hosts: Annotated[list[str], NoDecode] = ["localhost", "127.0.0.1"]
     auto_close_days_default: int = Field(default=30, ge=1, le=365)
     max_upload_mb: int = Field(default=10, ge=1, le=100)
+    # A backup ZIP holds every document, so it gets its own, larger limit.
+    max_import_mb: int = Field(default=1024, ge=1, le=10240)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     app_version: str = "0.1.0"
     build_sha: str = "dev"

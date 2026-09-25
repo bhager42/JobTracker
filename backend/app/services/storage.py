@@ -85,9 +85,18 @@ class StagedFile:
     size_bytes: int
     sha256: str
 
-    def keep(self, uploads_dir: Path) -> str:
-        """Moves the file to its permanent UUID name and returns that name."""
+    def keep(self, uploads_dir: Path, preferred: str | None = None) -> str:
+        """Moves the file to its permanent UUID name and returns that name. A restore passes
+        the name from the backup; it's used only if it's one we could have generated, fits
+        this file's type, and is free."""
         name = f"{uuid.uuid4().hex}{self.file_type.extension}"
+        if (
+            preferred
+            and _STORED_NAME.match(preferred)
+            and preferred.endswith(self.file_type.extension)
+            and not (uploads_dir / preferred).exists()
+        ):
+            name = preferred
         self.temp_path.rename(uploads_dir / name)
         return name
 

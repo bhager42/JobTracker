@@ -463,3 +463,46 @@ class SourceMetrics(OutputModel):
 
 class MetricsBySource(OutputModel):
     sources: list[SourceMetrics]
+
+
+# --- import / export ----------------------------------------------------------------------
+
+
+class CsvPreview(OutputModel):
+    headers: list[str]
+    sample_rows: list[list[str]]
+    row_count: int
+    suggested_mapping: dict[str, str] = Field(description="Field → CSV column header.")
+    fields: list[str] = Field(description="Fields a column can map to.")
+    required: list[str]
+
+
+class CsvRowError(OutputModel):
+    row: int = Field(description="Line number in the file; the header is line 1.")
+    message: str
+
+
+class CsvImportResult(OutputModel):
+    total: int
+    valid: int
+    created: int = Field(description="0 on a dry run.")
+    errors: list[CsvRowError]
+
+
+class ImportResultOut(OutputModel):
+    restored: bool = Field(
+        description="The instance was empty, so ids and settings were restored exactly."
+    )
+    applications: int
+    documents: int
+    documents_reused: int
+    documents_missing: int
+
+
+class DataStats(OutputModel):
+    applications: int
+    archived: int
+    documents: int
+    history_entries: int
+    database_bytes: int
+    uploads_bytes: int

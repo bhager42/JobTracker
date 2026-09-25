@@ -42,10 +42,15 @@ def update_auto_close(session: Session, patch: AutoCloseSettingsUpdate) -> AutoC
     updated = AutoCloseSettings.model_validate(
         {**current.model_dump(), **patch.model_dump(exclude_unset=True, exclude_none=True)}
     )
+    save_auto_close(session, updated)
+    return updated
+
+
+def save_auto_close(session: Session, cfg: AutoCloseSettings, *, commit: bool = True) -> None:
     row = session.get(AppSetting, AUTO_CLOSE_KEY)
     if row is None:
-        session.add(AppSetting(key=AUTO_CLOSE_KEY, value=updated.model_dump_json()))
+        session.add(AppSetting(key=AUTO_CLOSE_KEY, value=cfg.model_dump_json()))
     else:
-        row.value = updated.model_dump_json()
-    session.commit()
-    return updated
+        row.value = cfg.model_dump_json()
+    if commit:
+        session.commit()

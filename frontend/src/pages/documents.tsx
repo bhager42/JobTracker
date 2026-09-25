@@ -216,7 +216,7 @@ function DocumentRow({
   const pdf = isPdf(doc.mime_type)
   return (
     <li className="flex items-center gap-3 px-4 py-3">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted font-mono text-[10px] font-semibold text-muted-foreground">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted font-mono text-[10px] font-semibold text-foreground/75">
         {fileTypeLabel(doc.mime_type)}
       </div>
       <div className="min-w-0 flex-1">

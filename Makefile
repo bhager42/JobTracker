@@ -1,4 +1,4 @@
-.PHONY: install dev dev-api dev-web test lint format build run
+.PHONY: install dev dev-api dev-web test e2e lint format build run
 
 export PATH := $(HOME)/.local/bin:$(PATH)
 DEV_DATA := $(CURDIR)/.data
@@ -22,6 +22,11 @@ dev-web:
 test:
 	cd backend && uv run pytest -q
 	cd frontend && pnpm test
+
+# Playwright against the real app on a throwaway data dir (builds the frontend first).
+# Set E2E_BASE_URL to test a running instance, e.g. `make run` in another terminal.
+e2e:
+	cd frontend && pnpm e2e
 
 lint:
 	cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy

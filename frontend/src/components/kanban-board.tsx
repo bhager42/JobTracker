@@ -302,20 +302,34 @@ function DraggableCard({
   app: Application
   onMove: (app: Application, target: Status) => void
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: app.id })
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
+    id: app.id,
+  })
   return (
+    // A pointer drag can start anywhere on the card; keyboard dragging (and the button role)
+    // live on the handle, so the card's link and menu aren't nested inside another control.
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      aria-roledescription="Draggable application card"
-      aria-label={`${app.company}, ${app.job_title}`}
-      className={cn(
-        'rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
-        isDragging && 'opacity-40',
-      )}
+      onPointerDown={(e) => listeners?.onPointerDown?.(e)}
+      className={cn('rounded-xl', isDragging && 'opacity-40')}
     >
-      <CardBody app={app} onMove={onMove} />
+      <CardBody
+        app={app}
+        onMove={onMove}
+        handle={
+          <button
+            ref={setActivatorNodeRef}
+            type="button"
+            {...attributes}
+            onKeyDown={(e) => listeners?.onKeyDown?.(e)}
+            aria-label={`Drag ${app.company}`}
+            aria-roledescription="draggable card"
+            className="-ml-1 flex size-5 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground/60 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <GripVertical className="size-3.5" aria-hidden />
+          </button>
+        }
+      />
     </div>
   )
 }
@@ -324,10 +338,12 @@ function CardBody({
   app,
   overlay,
   onMove,
+  handle,
 }: {
   app: Application
   overlay?: boolean
   onMove?: (app: Application, target: Status) => void
+  handle?: ReactNode
 }) {
   const closed = STATUS_META[app.status].group === 'closed'
   return (
@@ -338,14 +354,14 @@ function CardBody({
       )}
     >
       <div className="flex items-start gap-1">
-        <GripVertical className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/50" aria-hidden />
+        {handle ?? (
+          <GripVertical className="mt-0.5 size-3.5 shrink-0 text-muted-foreground/50" aria-hidden />
+        )}
         <div className="min-w-0 flex-1">
           <Link
             to="/applications/$id"
             params={{ id: String(app.id) }}
             className="block truncate font-medium hover:underline"
-            // Keep the link from being the drag handle's click target during keyboard drags.
-            onKeyDown={(e) => e.stopPropagation()}
           >
             {app.company}
           </Link>
