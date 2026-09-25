@@ -44,11 +44,15 @@ export const api = createClient<paths>({
 })
 api.use(requestedWith)
 
+/** Fired when any API call answers 401, so the sign-in gate can take over. */
+export const UNAUTHORIZED_EVENT = 'jobtracker:unauthorized'
+
 /** Unwraps an openapi-fetch result, throwing `ApiError` on any non-2xx response. */
 export async function unwrap<T>(
   promise: Promise<{ data?: T; error?: unknown; response: Response }>,
 ): Promise<T> {
   const { data, error, response } = await promise
+  if (response.status === 401) window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
   if (!response.ok) {
     const problem = isProblem(error) ? error : null
     throw new ApiError(response.status, problem, `${response.status} ${response.statusText}`)

@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
+from tests.conftest import api_client
 
 # --- sample files -------------------------------------------------------------------------
 
@@ -151,7 +152,7 @@ def test_upload_rejects_bad_kind(client: TestClient) -> None:
 @pytest.fixture
 def small_client(tmp_path: Path) -> Any:
     settings = Settings(data_dir=tmp_path / "data", static_dir=tmp_path / "static", max_upload_mb=1)
-    with TestClient(create_app(settings)) as c:
+    with api_client(create_app(settings)) as c:
         yield c, settings
 
 
@@ -360,6 +361,6 @@ def test_startup_removes_stale_temp_files(tmp_path: Path) -> None:
     settings = Settings(data_dir=tmp_path / "data", static_dir=tmp_path / "static")
     settings.uploads_dir.mkdir(parents=True)
     (settings.uploads_dir / ".tmp-deadbeef").write_bytes(b"partial")
-    with TestClient(create_app(settings)):
+    with api_client(create_app(settings)):
         pass
     assert stored_files(settings) == []

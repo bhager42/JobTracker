@@ -12,6 +12,9 @@ services:
       TZ: America/Chicago
       ALLOWED_HOSTS: "truenas.local,192.168.1.10,localhost"
       AUTO_CLOSE_DAYS_DEFAULT: "30"
+      # Optional sign-in. Off unless one of these is set:
+      # AUTH_PASSWORD: "choose-a-long-passphrase"
+      # AUTH_PASSWORD_FILE: /data/password.txt
     volumes:
       - /mnt/tank/apps/jobtracker:/data
     read_only: true

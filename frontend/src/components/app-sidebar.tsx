@@ -5,9 +5,11 @@ import {
   FileText,
   LayoutDashboard,
   ListChecks,
+  LogOut,
   Settings,
 } from 'lucide-react'
 
+import { useAuthStatus, useLogout } from '@/api/auth'
 import { useHealth } from '@/api/client'
 import {
   Sidebar,
@@ -71,6 +73,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        <SignOut />
         <ApiStatus />
       </SidebarFooter>
       <SidebarRail />
@@ -93,5 +96,25 @@ function ApiStatus() {
       />
       <span className="group-data-[collapsible=icon]:hidden">{label}</span>
     </div>
+  )
+}
+
+function SignOut() {
+  const status = useAuthStatus()
+  const logout = useLogout()
+  if (!status.data?.enabled) return null
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          tooltip="Sign out"
+          onClick={() => logout.mutate()}
+          disabled={logout.isPending}
+        >
+          <LogOut />
+          <span>Sign out</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
   )
 }

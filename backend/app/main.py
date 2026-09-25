@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app import scheduler
+from app import auth, scheduler
 from app.clock import Clock, utc_now
 from app.config import Settings, get_settings
 from app.db import make_engine, make_session_factory
@@ -17,7 +17,12 @@ from app.migrate import upgrade_to_head
 from app.problems import install_problem_handlers
 from app.routers import applications, dashboard, documents, health, metrics
 from app.routers import settings as settings_router
-from app.security import BodySizeLimitMiddleware
+from app.security import (
+    BodySizeLimitMiddleware,
+    CsrfMiddleware,
+    HostCheckMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.services.app_settings import seed_defaults
 from app.services.storage import remove_stale_temp_files
 
@@ -49,6 +54,11 @@ def create_app(
         session_factory = make_session_factory(engine)
         app.state.engine = engine
         app.state.session_factory = session_factory
+        password = settings.password
+        if password is not None:
+            secret = auth.load_or_create_secret(settings.session_key_path)
+            app.state.auth = auth.Authenticator(password, secret)
+            log.info("Sign-in is enabled")
         with session_factory() as session:
             seed_defaults(session, auto_close_days=settings.auto_close_days_default)
         # Migrations first, then one auto-close pass, then the hourly loop.
@@ -68,11 +78,13 @@ def create_app(
         version=settings.app_version,
         lifespan=lifespan,
         openapi_url="/api/openapi.json",
-        docs_url="/api/docs",
+        # No Swagger UI: it loads scripts from a CDN, which the CSP (and offline use) rule out.
+        docs_url=None,
         redoc_url=None,
     )
     app.dependency_overrides[get_settings] = lambda: settings
     app.state.clock = clock
+    app.state.auth = None  # set in the lifespan when AUTH_PASSWORD(_FILE) is configured
     install_problem_handlers(app)
     app.include_router(health.router)
     app.include_router(applications.router)
@@ -80,6 +92,12 @@ def create_app(
     app.include_router(settings_router.router)
     app.include_router(dashboard.router)
     app.include_router(metrics.router)
+    app.include_router(auth.router)
+
+    # Each add wraps the ones before it, so this runs outermost-last. Request order:
+    # security headers → Host check → body limit → cross-site guard → sign-in → routes.
+    app.add_middleware(auth.AuthMiddleware)
+    app.add_middleware(CsrfMiddleware, allowed_hosts=settings.allowed_hosts)
     app.add_middleware(
         BodySizeLimitMiddleware,
         default_limit=4 * 1024 * 1024,
@@ -87,6 +105,8 @@ def create_app(
         upload_limit=(settings.max_upload_mb + 1) * 1024 * 1024,
         upload_paths=frozenset({"/api/documents"}),
     )
+    app.add_middleware(HostCheckMiddleware, allowed_hosts=settings.allowed_hosts)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     _mount_spa(app, settings.static_dir)
     return app

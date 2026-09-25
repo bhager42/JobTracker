@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, text
 from app.config import Settings
 from app.main import create_app
 from app.migrate import alembic_config
+from tests.conftest import api_client
 
 
 def test_health_ok(client: TestClient) -> None:
@@ -40,7 +41,7 @@ def test_spa_fallback_serves_index(tmp_path: Path) -> None:
     (static / "assets" / "app.js").write_text("console.log(1)")
     (static / "favicon.svg").write_text("<svg/>")
     settings = Settings(data_dir=tmp_path / "data", static_dir=static)
-    with TestClient(create_app(settings)) as c:
+    with api_client(create_app(settings)) as c:
         assert "JobTracker" in c.get("/applications/42").text
         assert c.get("/assets/app.js").text == "console.log(1)"
         assert c.get("/favicon.svg").text == "<svg/>"

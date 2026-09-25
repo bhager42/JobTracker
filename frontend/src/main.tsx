@@ -1,3 +1,6 @@
+// Must stay first: configures zod before any schema module is evaluated.
+import '@/lib/zod-config'
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'

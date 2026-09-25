@@ -11,6 +11,9 @@ services:
       TZ: ${TZ:-America/Chicago}
       ALLOWED_HOSTS: "localhost,127.0.0.1"
       AUTO_CLOSE_DAYS_DEFAULT: "30"
+      # Optional sign-in. Off unless one of these is set:
+      # AUTH_PASSWORD: "choose-a-long-passphrase"
+      # AUTH_PASSWORD_FILE: /data/password.txt
     volumes:
       - jobtracker-data:/data
     read_only: true

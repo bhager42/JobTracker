@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
-from tests.conftest import FrozenClock
+from tests.conftest import FrozenClock, api_client
 
 
 def create(client: TestClient, company: str = "Acme", **fields: Any) -> dict[str, Any]:
@@ -50,11 +50,11 @@ def test_env_seeds_days_on_first_run_then_db_wins(tmp_path: Path, clock: FrozenC
             data_dir=tmp_path / "data", static_dir=tmp_path / "s", auto_close_days_default=days
         )
 
-    with TestClient(create_app(settings(45), clock=clock)) as c:
+    with api_client(create_app(settings(45), clock=clock)) as c:
         assert c.get("/api/settings").json()["auto_close"]["days"] == 45
         set_auto_close(c, days=20)
     # A later start with a different env default keeps the stored value.
-    with TestClient(create_app(settings(60), clock=clock)) as c:
+    with api_client(create_app(settings(60), clock=clock)) as c:
         assert c.get("/api/settings").json()["auto_close"]["days"] == 20
 
 
@@ -259,10 +259,10 @@ def test_a_manual_change_after_auto_close_clears_the_flag(
 
 def test_runs_at_startup(tmp_path: Path, clock: FrozenClock) -> None:
     settings = Settings(data_dir=tmp_path / "data", static_dir=tmp_path / "s")
-    with TestClient(create_app(settings, clock=clock)) as c:
+    with api_client(create_app(settings, clock=clock)) as c:
         app = create(c)
     clock.advance(days=45)  # the NAS was off for a while
-    with TestClient(create_app(settings, clock=clock)) as c:
+    with api_client(create_app(settings, clock=clock)) as c:
         body = get(c, app["id"])
         assert body["status"] == "not_selected"
         assert body["history"][-1]["changed_at"] == "2026-04-24T15:00:00Z"
@@ -270,7 +270,7 @@ def test_runs_at_startup(tmp_path: Path, clock: FrozenClock) -> None:
 
 def test_runs_again_on_the_interval(tmp_path: Path, clock: FrozenClock) -> None:
     settings = Settings(data_dir=tmp_path / "data", static_dir=tmp_path / "s")
-    with TestClient(create_app(settings, clock=clock, auto_close_interval=0.01)) as c:
+    with api_client(create_app(settings, clock=clock, auto_close_interval=0.01)) as c:
         app = create(c)
         clock.advance(days=31)
 
@@ -300,7 +300,7 @@ def test_scheduler_survives_a_failed_run(
 
     monkeypatch.setattr(scheduler, "run_auto_close", flaky)
     settings = Settings(data_dir=tmp_path / "data", static_dir=tmp_path / "s")
-    with TestClient(create_app(settings, clock=clock, auto_close_interval=0.01)) as c:
+    with api_client(create_app(settings, clock=clock, auto_close_interval=0.01)) as c:
         app = create(c)
         clock.advance(days=31)
 

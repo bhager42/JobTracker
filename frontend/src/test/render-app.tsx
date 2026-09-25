@@ -28,6 +28,7 @@ export function renderApp(url: string, handlers: Record<string, Handler>) {
   const all: Record<string, Handler> = {
     'GET /api/health': () =>
       Response.json({ status: 'ok', version: '0.0.0-test', build_sha: 'test', db: 'ok' }),
+    'GET /api/auth/status': () => Response.json({ enabled: false, authenticated: true }),
     ...handlers,
   }
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -138,4 +139,18 @@ export function page(items: ApplicationDetail[], total = items.length) {
     page: 1,
     page_size: 50,
   })
+}
+
+export const emptyDashboard = {
+  kpis: {
+    applied_this_week: 0,
+    applied_this_month: 0,
+    active_pipeline: 0,
+    total_applied: 0,
+    interview_rate: null,
+    response_rate: null,
+  },
+  auto_closing_soon: [],
+  offers_awaiting_decision: [],
+  recent_activity: [],
 }

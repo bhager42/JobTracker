@@ -3,8 +3,10 @@ import time
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.config import Settings
@@ -28,6 +30,14 @@ class FrozenClock:
         self.now += timedelta(**kwargs)
 
 
+def api_client(app: FastAPI, **kwargs: Any) -> TestClient:
+    """A client like the real frontend: a loopback Host (always allowed) and the
+    `X-Requested-With` header every state-changing API call must carry."""
+    kwargs.setdefault("base_url", "http://localhost")
+    headers = {"X-Requested-With": "jobtracker", **kwargs.pop("headers", {})}
+    return TestClient(app, headers=headers, **kwargs)
+
+
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     return Settings(data_dir=tmp_path / "data", static_dir=tmp_path / "static")
@@ -41,5 +51,5 @@ def clock() -> FrozenClock:
 
 @pytest.fixture
 def client(settings: Settings, clock: FrozenClock) -> Iterator[TestClient]:
-    with TestClient(create_app(settings, clock=clock)) as c:
+    with api_client(create_app(settings, clock=clock)) as c:
         yield c

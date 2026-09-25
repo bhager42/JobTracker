@@ -115,6 +115,7 @@ def get_document_file(
         "Content-Security-Policy": (
             "sandbox; frame-ancestors 'self'" if inline else "default-src 'none'; sandbox"
         ),
+        "X-Frame-Options": "SAMEORIGIN" if inline else "DENY",
     }
     return FileResponse(path, media_type=doc.mime_type, headers=headers)
 
