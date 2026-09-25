@@ -26,7 +26,10 @@ test('dragging a card with the mouse changes its status', async ({ page, request
   await page.mouse.move(to.x + to.width / 2, to.y + 80, { steps: 12 })
   await page.mouse.up()
 
-  await expect(page.getByText('Moved Drag Me Inc to Recruiter Screen')).toBeVisible()
+  // Look in the toast: dnd-kit's screen-reader live region announces the same words.
+  await expect(
+    page.locator('[data-sonner-toast]', { hasText: 'Moved Drag Me Inc to Recruiter Screen' }),
+  ).toBeVisible()
   const detail = await (await request.get(`/api/applications/${created.id}`)).json()
   expect(detail.status).toBe('screening')
   expect(detail.history.at(-1)).toMatchObject({ from_status: 'applied', to_status: 'screening' })
