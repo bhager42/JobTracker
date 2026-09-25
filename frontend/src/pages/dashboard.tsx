@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Bot, Gift, Hourglass, LayoutDashboard } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 
 import type { Application } from '@/api/applications'
 import { useDashboard, type ActivityItem, type Dashboard } from '@/api/dashboard'
@@ -8,11 +8,13 @@ import { AutoCloseHint } from '@/components/auto-close-hint'
 import { EmptyState } from '@/components/empty-state'
 import { NewApplicationButton } from '@/components/new-application-button'
 import { PageHeader } from '@/components/page-header'
+import { StatTile } from '@/components/stat-tile'
 import { StatusBadge } from '@/components/status-badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDateTime, formatRelative } from '@/lib/dates'
 import { STATUS_META, TONE_DOT } from '@/lib/status'
+import { percent } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 export function DashboardPage() {
@@ -41,8 +43,6 @@ export function DashboardPage() {
     </>
   )
 }
-
-const percent = (value: number | null) => (value === null ? '—' : `${Math.round(value * 100)}%`)
 
 function DashboardBody({ data }: { data: Dashboard }) {
   const { kpis } = data
@@ -118,32 +118,19 @@ function DashboardBody({ data }: { data: Dashboard }) {
 }
 
 function Kpi({
-  label,
-  value,
-  hint,
   to,
   search,
-}: {
-  label: string
-  value: number | string
-  hint?: string
+  ...tile
+}: ComponentProps<typeof StatTile> & {
   to?: '/applications'
   search?: { status: ('applied' | 'screening' | 'interviewing' | 'offer')[] }
 }) {
-  const body = (
-    <>
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-2 font-mono text-3xl font-semibold tracking-tight tabular-nums">{value}</p>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-    </>
-  )
-  const className = 'block rounded-xl border bg-card p-4'
   return to ? (
-    <Link to={to} search={search} className={cn(className, 'transition-colors hover:bg-muted/50')}>
-      {body}
+    <Link to={to} search={search} className="block rounded-xl transition-colors hover:bg-muted/50">
+      <StatTile {...tile} className="h-full bg-transparent" />
     </Link>
   ) : (
-    <div className={className}>{body}</div>
+    <StatTile {...tile} />
   )
 }
 

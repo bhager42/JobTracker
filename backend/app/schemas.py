@@ -380,3 +380,86 @@ class DashboardOut(OutputModel):
     auto_closing_soon: list[ApplicationOut]
     offers_awaiting_decision: list[ApplicationOut]
     recent_activity: list[ActivityItem]
+
+
+# --- metrics ------------------------------------------------------------------------------
+
+
+class StatusCount(OutputModel):
+    status: Status
+    count: int
+
+
+class RoundCount(OutputModel):
+    rounds: int
+    count: int
+
+
+class Outcomes(OutputModel):
+    rejected_no_interview: int
+    rejected_after_interview: list[RoundCount] = Field(
+        description="Rejections after interviewing, by the round reached."
+    )
+    ghosted: int = Field(description="Not Selected (No Response).")
+    withdrawn: int
+    declined: int
+    position_closed: int
+
+
+class MetricsSummary(OutputModel):
+    total_applied: int
+    responded: int
+    interviewed: int
+    offered: int
+    accepted: int
+    response_rate: float | None
+    interview_rate: float | None
+    offer_rate: float | None
+    median_days_to_first_response: float | None
+    status_breakdown: list[StatusCount] = Field(
+        description="Current status of the applications in range, in pipeline order."
+    )
+    outcomes: Outcomes
+
+
+class GroupCounts(OutputModel):
+    active: int
+    closed_positive: int
+    closed_neutral: int
+    closed_negative: int
+
+
+class TimeseriesBucket(OutputModel):
+    start: date
+    end: date
+    label: str = Field(description='"2026-W01", "2026-03", or "2026".')
+    total: int
+    by_group: GroupCounts = Field(description="Split by each application's current status group.")
+
+
+class MetricsTimeseries(OutputModel):
+    granularity: Literal["week", "month", "year"]
+    buckets: list[TimeseriesBucket]
+
+
+class FunnelStage(OutputModel):
+    stage: Status
+    count: int
+    rate: float | None = Field(description="Share of applied applications that got this far.")
+
+
+class MetricsFunnel(OutputModel):
+    stages: list[FunnelStage]
+
+
+class SourceMetrics(OutputModel):
+    source: Source | None = Field(description="Null groups applications with no source set.")
+    applications: int
+    responses: int
+    interviews: int
+    response_rate: float | None
+    interview_rate: float | None
+
+
+class MetricsBySource(OutputModel):
+    sources: list[SourceMetrics]

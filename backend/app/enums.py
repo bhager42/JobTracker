@@ -45,6 +45,8 @@ STATUS_GROUPS: dict[Status, StatusGroup] = {
     Status.CLOSED: StatusGroup.CLOSED_NEUTRAL,
 }
 
+STATUSES_IN_ORDER: tuple[Status, ...] = tuple(Status)  # pipeline order, as declared
+
 TERMINAL_STATUSES: frozenset[Status] = frozenset(
     s for s, g in STATUS_GROUPS.items() if g.name.startswith("CLOSED")
 )

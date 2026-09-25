@@ -240,6 +240,74 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/metrics/by-source': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get By Source */
+    get: operations['get_by_source_api_metrics_by_source_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/metrics/funnel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Funnel */
+    get: operations['get_funnel_api_metrics_funnel_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/metrics/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Summary */
+    get: operations['get_summary_api_metrics_summary_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/metrics/timeseries': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Timeseries */
+    get: operations['get_timeseries_api_metrics_timeseries_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/settings': {
     parameters: {
       query?: never
@@ -732,6 +800,28 @@ export interface components {
       /** Type */
       type: string
     }
+    /** FunnelStage */
+    FunnelStage: {
+      /** Count */
+      count: number
+      /**
+       * Rate
+       * @description Share of applied applications that got this far.
+       */
+      rate: number | null
+      stage: components['schemas']['Status']
+    }
+    /** GroupCounts */
+    GroupCounts: {
+      /** Active */
+      active: number
+      /** Closed Negative */
+      closed_negative: number
+      /** Closed Neutral */
+      closed_neutral: number
+      /** Closed Positive */
+      closed_positive: number
+    }
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -768,6 +858,74 @@ export interface components {
       /** Job Title */
       job_title: string
     }
+    /** MetricsBySource */
+    MetricsBySource: {
+      /** Sources */
+      sources: components['schemas']['SourceMetrics'][]
+    }
+    /** MetricsFunnel */
+    MetricsFunnel: {
+      /** Stages */
+      stages: components['schemas']['FunnelStage'][]
+    }
+    /** MetricsSummary */
+    MetricsSummary: {
+      /** Accepted */
+      accepted: number
+      /** Interview Rate */
+      interview_rate: number | null
+      /** Interviewed */
+      interviewed: number
+      /** Median Days To First Response */
+      median_days_to_first_response: number | null
+      /** Offer Rate */
+      offer_rate: number | null
+      /** Offered */
+      offered: number
+      outcomes: components['schemas']['Outcomes']
+      /** Responded */
+      responded: number
+      /** Response Rate */
+      response_rate: number | null
+      /**
+       * Status Breakdown
+       * @description Current status of the applications in range, in pipeline order.
+       */
+      status_breakdown: components['schemas']['StatusCount'][]
+      /** Total Applied */
+      total_applied: number
+    }
+    /** MetricsTimeseries */
+    MetricsTimeseries: {
+      /** Buckets */
+      buckets: components['schemas']['TimeseriesBucket'][]
+      /**
+       * Granularity
+       * @enum {string}
+       */
+      granularity: 'week' | 'month' | 'year'
+    }
+    /** Outcomes */
+    Outcomes: {
+      /** Declined */
+      declined: number
+      /**
+       * Ghosted
+       * @description Not Selected (No Response).
+       */
+      ghosted: number
+      /** Position Closed */
+      position_closed: number
+      /**
+       * Rejected After Interview
+       * @description Rejections after interviewing, by the round reached.
+       */
+      rejected_after_interview: components['schemas']['RoundCount'][]
+      /** Rejected No Interview */
+      rejected_no_interview: number
+      /** Withdrawn */
+      withdrawn: number
+    }
     /** Problem */
     Problem: {
       /** Detail */
@@ -783,6 +941,13 @@ export interface components {
        * @default about:blank
        */
       type?: string
+    }
+    /** RoundCount */
+    RoundCount: {
+      /** Count */
+      count: number
+      /** Rounds */
+      rounds: number
     }
     /** SettingsOut */
     SettingsOut: {
@@ -806,6 +971,21 @@ export interface components {
      * @enum {string}
      */
     Source: 'linkedin' | 'indeed' | 'referral' | 'company_site' | 'recruiter' | 'other'
+    /** SourceMetrics */
+    SourceMetrics: {
+      /** Applications */
+      applications: number
+      /** Interview Rate */
+      interview_rate: number | null
+      /** Interviews */
+      interviews: number
+      /** Response Rate */
+      response_rate: number | null
+      /** Responses */
+      responses: number
+      /** @description Null groups applications with no source set. */
+      source: components['schemas']['Source'] | null
+    }
     /**
      * Status
      * @enum {string}
@@ -831,6 +1011,12 @@ export interface components {
       note?: string | null
       status: components['schemas']['Status']
     }
+    /** StatusCount */
+    StatusCount: {
+      /** Count */
+      count: number
+      status: components['schemas']['Status']
+    }
     /** StatusHistoryOut */
     StatusHistoryOut: {
       /**
@@ -845,6 +1031,28 @@ export interface components {
       note: string | null
       source: components['schemas']['HistorySource']
       to_status: components['schemas']['Status']
+    }
+    /** TimeseriesBucket */
+    TimeseriesBucket: {
+      /** @description Split by each application's current status group. */
+      by_group: components['schemas']['GroupCounts']
+      /**
+       * End
+       * Format: date
+       */
+      end: string
+      /**
+       * Label
+       * @description "2026-W01", "2026-03", or "2026".
+       */
+      label: string
+      /**
+       * Start
+       * Format: date
+       */
+      start: string
+      /** Total */
+      total: number
     }
     /** ValidationError */
     ValidationError: {
@@ -1687,6 +1895,151 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HealthOut']
+        }
+      }
+    }
+  }
+  get_by_source_api_metrics_by_source_get: {
+    parameters: {
+      query?: {
+        from?: string | null
+        to?: string | null
+        status?: components['schemas']['Status'][] | null
+        source?: components['schemas']['Source'][] | null
+        work_mode?: components['schemas']['WorkMode'][] | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MetricsBySource']
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  get_funnel_api_metrics_funnel_get: {
+    parameters: {
+      query?: {
+        from?: string | null
+        to?: string | null
+        status?: components['schemas']['Status'][] | null
+        source?: components['schemas']['Source'][] | null
+        work_mode?: components['schemas']['WorkMode'][] | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MetricsFunnel']
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  get_summary_api_metrics_summary_get: {
+    parameters: {
+      query?: {
+        from?: string | null
+        to?: string | null
+        status?: components['schemas']['Status'][] | null
+        source?: components['schemas']['Source'][] | null
+        work_mode?: components['schemas']['WorkMode'][] | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MetricsSummary']
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
+        }
+      }
+    }
+  }
+  get_timeseries_api_metrics_timeseries_get: {
+    parameters: {
+      query?: {
+        granularity?: 'week' | 'month' | 'year'
+        from?: string | null
+        to?: string | null
+        status?: components['schemas']['Status'][] | null
+        source?: components['schemas']['Source'][] | null
+        work_mode?: components['schemas']['WorkMode'][] | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MetricsTimeseries']
+        }
+      }
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Problem']
+          'application/problem+json': unknown
         }
       }
     }

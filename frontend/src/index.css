@@ -83,6 +83,20 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Chart colors, validated with the dataviz palette checks (light surface):
+     categorical slots 1-4 in fixed order; a one-hue ordinal ramp for the funnel,
+     most to least. Chrome (grid/axis) stays one step off the surface. */
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-ramp-1: #104281;
+  --viz-ramp-2: #1c5cab;
+  --viz-ramp-3: #2a78d6;
+  --viz-ramp-4: #5598e7;
+  --viz-ramp-5: #86b6ef;
+  --viz-grid: #e1e0d9;
 }
 
 .dark {
@@ -117,6 +131,18 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* The same hues stepped for the dark surface (not an automatic flip). */
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-ramp-1: #9ec5f4;
+  --viz-ramp-2: #6da7ec;
+  --viz-ramp-3: #3987e5;
+  --viz-ramp-4: #256abf;
+  --viz-ramp-5: #184f95;
+  --viz-grid: #2c2c2a;
 }
 
 @layer base {

@@ -2,6 +2,7 @@ import { createRootRoute, createRoute, createRouter } from '@tanstack/react-rout
 
 import { NotFound, RootLayout } from '@/components/root-layout'
 import { validateApplicationsSearch } from '@/lib/applications-search'
+import { validateMetricsSearch } from '@/lib/metrics-search'
 import { ApplicationDetailPage } from '@/pages/application-detail'
 import { ApplicationsPage } from '@/pages/applications'
 import { DashboardPage } from '@/pages/dashboard'
@@ -25,7 +26,12 @@ export const routeTree = rootRoute.addChildren([
     component: ApplicationDetailPage,
   }),
   createRoute({ getParentRoute: () => rootRoute, path: '/documents', component: DocumentsPage }),
-  createRoute({ getParentRoute: () => rootRoute, path: '/metrics', component: MetricsPage }),
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/metrics',
+    component: MetricsPage,
+    validateSearch: validateMetricsSearch,
+  }),
   createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: SettingsPage }),
 ])
 

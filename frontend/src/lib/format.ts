@@ -26,3 +26,7 @@ export function formatSalary(
   if (max !== null) return `Up to ${money(max, code)}`
   return ''
 }
+
+/** A 0–1 rate as a whole percentage, or "—" when there's nothing to divide by. */
+export const percent = (value: number | null | undefined) =>
+  value === null || value === undefined ? '—' : `${Math.round(value * 100)}%`
