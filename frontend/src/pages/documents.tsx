@@ -105,6 +105,7 @@ export function DocumentsPage() {
           <Input
             type="search"
             aria-label="Search documents"
+            data-page-search
             placeholder="Search documents…"
             className="pl-8"
             value={q}

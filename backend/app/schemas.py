@@ -344,3 +344,39 @@ class AboutOut(OutputModel):
     version: str
     build_sha: str
     data_dir: str
+
+
+# --- dashboard ----------------------------------------------------------------------------
+
+
+class DashboardKpis(OutputModel):
+    applied_this_week: int
+    applied_this_month: int
+    active_pipeline: int = Field(description="Applied, screening, interviewing, or offer.")
+    total_applied: int
+    interview_rate: float | None = Field(
+        description="Share of applied applications that ever reached an interview."
+    )
+    response_rate: float | None = Field(
+        description="Share of applied applications that ever got a response (anything past"
+        " Applied except Not Selected, Withdrawn, or Position Closed)."
+    )
+
+
+class ActivityItem(OutputModel):
+    id: int
+    application_id: int
+    company: str
+    job_title: str
+    from_status: Status | None
+    to_status: Status
+    changed_at: datetime
+    source: HistorySource
+    note: str | None
+
+
+class DashboardOut(OutputModel):
+    kpis: DashboardKpis
+    auto_closing_soon: list[ApplicationOut]
+    offers_awaiting_decision: list[ApplicationOut]
+    recent_activity: list[ActivityItem]

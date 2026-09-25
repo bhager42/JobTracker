@@ -153,6 +153,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/dashboard': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Dashboard */
+    get: operations['get_dashboard_api_dashboard_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/documents': {
     parameters: {
       query?: never
@@ -253,6 +270,27 @@ export interface components {
       data_dir: string
       /** Version */
       version: string
+    }
+    /** ActivityItem */
+    ActivityItem: {
+      /** Application Id */
+      application_id: number
+      /**
+       * Changed At
+       * Format: date-time
+       */
+      changed_at: string
+      /** Company */
+      company: string
+      from_status: components['schemas']['Status'] | null
+      /** Id */
+      id: number
+      /** Job Title */
+      job_title: string
+      /** Note */
+      note: string | null
+      source: components['schemas']['HistorySource']
+      to_status: components['schemas']['Status']
     }
     /** ApplicationCreate */
     ApplicationCreate: {
@@ -557,6 +595,40 @@ export interface components {
     BulkResult: {
       /** Affected */
       affected: number
+    }
+    /** DashboardKpis */
+    DashboardKpis: {
+      /**
+       * Active Pipeline
+       * @description Applied, screening, interviewing, or offer.
+       */
+      active_pipeline: number
+      /** Applied This Month */
+      applied_this_month: number
+      /** Applied This Week */
+      applied_this_week: number
+      /**
+       * Interview Rate
+       * @description Share of applied applications that ever reached an interview.
+       */
+      interview_rate: number | null
+      /**
+       * Response Rate
+       * @description Share of applied applications that ever got a response (anything past Applied except Not Selected, Withdrawn, or Position Closed).
+       */
+      response_rate: number | null
+      /** Total Applied */
+      total_applied: number
+    }
+    /** DashboardOut */
+    DashboardOut: {
+      /** Auto Closing Soon */
+      auto_closing_soon: components['schemas']['ApplicationOut'][]
+      kpis: components['schemas']['DashboardKpis']
+      /** Offers Awaiting Decision */
+      offers_awaiting_decision: components['schemas']['ApplicationOut'][]
+      /** Recent Activity */
+      recent_activity: components['schemas']['ActivityItem'][]
     }
     /** DocumentInUseProblem */
     DocumentInUseProblem: {
@@ -1342,6 +1414,26 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['AutoCloseRunResult']
+        }
+      }
+    }
+  }
+  get_dashboard_api_dashboard_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DashboardOut']
         }
       }
     }

@@ -15,7 +15,7 @@ from app.config import Settings, get_settings
 from app.db import make_engine, make_session_factory
 from app.migrate import upgrade_to_head
 from app.problems import install_problem_handlers
-from app.routers import applications, documents, health
+from app.routers import applications, dashboard, documents, health
 from app.routers import settings as settings_router
 from app.security import BodySizeLimitMiddleware
 from app.services.app_settings import seed_defaults
@@ -78,6 +78,7 @@ def create_app(
     app.include_router(applications.router)
     app.include_router(documents.router)
     app.include_router(settings_router.router)
+    app.include_router(dashboard.router)
     app.add_middleware(
         BodySizeLimitMiddleware,
         default_limit=4 * 1024 * 1024,

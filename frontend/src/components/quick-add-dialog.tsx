@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -17,7 +16,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import {
@@ -30,8 +28,14 @@ import { todayISO } from '@/lib/dates'
 import { errorProps } from '@/lib/aria'
 import { STATUS_LABELS } from '@/lib/status'
 
-export function QuickAddDialog() {
-  const [open, setOpen] = useState(false)
+/** The quick-add form. Mounted once in `AppCommandsProvider`; open it with `useAppCommands`. */
+export function QuickAddDialog({
+  open,
+  onOpenChange: setOpen,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
   const [resumeId, setResumeId] = useState<number | null>(null)
   const [coverLetterId, setCoverLetterId] = useState<number | null>(null)
   const navigate = useNavigate()
@@ -43,13 +47,15 @@ export function QuickAddDialog() {
   const { errors } = form.formState
   const status = useWatch({ control: form.control, name: 'status' })
 
-  const onOpenChange = (next: boolean) => {
-    if (next) {
+  // Start blank each time it opens.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
       form.reset(emptyApplicationForm(todayISO()))
       setResumeId(null)
       setCoverLetterId(null)
     }
-    setOpen(next)
   }
 
   const onSubmit = form.handleSubmit(async (values) => {
@@ -69,13 +75,7 @@ export function QuickAddDialog() {
   })
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus data-icon="inline-start" />
-          New application
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>New application</DialogTitle>

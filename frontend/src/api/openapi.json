@@ -20,6 +20,71 @@
         "title": "AboutOut",
         "type": "object"
       },
+      "ActivityItem": {
+        "properties": {
+          "application_id": {
+            "title": "Application Id",
+            "type": "integer"
+          },
+          "changed_at": {
+            "format": "date-time",
+            "title": "Changed At",
+            "type": "string"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "from_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Status"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "job_title": {
+            "title": "Job Title",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source": {
+            "$ref": "#/components/schemas/HistorySource"
+          },
+          "to_status": {
+            "$ref": "#/components/schemas/Status"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "company",
+          "job_title",
+          "from_status",
+          "to_status",
+          "changed_at",
+          "source",
+          "note"
+        ],
+        "title": "ActivityItem",
+        "type": "object"
+      },
       "ApplicationCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1142,6 +1207,92 @@
         },
         "required": ["affected"],
         "title": "BulkResult",
+        "type": "object"
+      },
+      "DashboardKpis": {
+        "properties": {
+          "active_pipeline": {
+            "description": "Applied, screening, interviewing, or offer.",
+            "title": "Active Pipeline",
+            "type": "integer"
+          },
+          "applied_this_month": {
+            "title": "Applied This Month",
+            "type": "integer"
+          },
+          "applied_this_week": {
+            "title": "Applied This Week",
+            "type": "integer"
+          },
+          "interview_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Share of applied applications that ever reached an interview.",
+            "title": "Interview Rate"
+          },
+          "response_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Share of applied applications that ever got a response (anything past Applied except Not Selected, Withdrawn, or Position Closed).",
+            "title": "Response Rate"
+          },
+          "total_applied": {
+            "title": "Total Applied",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "applied_this_week",
+          "applied_this_month",
+          "active_pipeline",
+          "total_applied",
+          "interview_rate",
+          "response_rate"
+        ],
+        "title": "DashboardKpis",
+        "type": "object"
+      },
+      "DashboardOut": {
+        "properties": {
+          "auto_closing_soon": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationOut"
+            },
+            "title": "Auto Closing Soon",
+            "type": "array"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/DashboardKpis"
+          },
+          "offers_awaiting_decision": {
+            "items": {
+              "$ref": "#/components/schemas/ApplicationOut"
+            },
+            "title": "Offers Awaiting Decision",
+            "type": "array"
+          },
+          "recent_activity": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityItem"
+            },
+            "title": "Recent Activity",
+            "type": "array"
+          }
+        },
+        "required": ["kpis", "auto_closing_soon", "offers_awaiting_decision", "recent_activity"],
+        "title": "DashboardOut",
         "type": "object"
       },
       "DocumentInUseProblem": {
@@ -2468,6 +2619,25 @@
         },
         "summary": "Run Auto Close Now",
         "tags": ["settings"]
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "operationId": "get_dashboard_api_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Dashboard",
+        "tags": ["dashboard"]
       }
     },
     "/api/documents": {

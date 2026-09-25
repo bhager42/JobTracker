@@ -1,11 +1,22 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import type { RowSelectionState, Updater } from '@tanstack/react-table'
-import { Archive, ArchiveRestore, CalendarRange, ListChecks, Search, Trash2, X } from 'lucide-react'
+import {
+  Archive,
+  ArchiveRestore,
+  CalendarRange,
+  Columns3,
+  ListChecks,
+  Rows3,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
   useApplications,
+  useBoardApplications,
   useBulkAction,
   type Application,
   type BulkAction,
@@ -14,9 +25,10 @@ import { ApplicationsTable, ColumnToggle } from '@/components/applications-table
 import { useApplicationsTable } from '@/components/applications-table-model'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
+import { KanbanBoard } from '@/components/kanban-board'
 import { MultiSelectFilter } from '@/components/multi-select-filter'
 import { PageHeader } from '@/components/page-header'
-import { QuickAddDialog } from '@/components/quick-add-dialog'
+import { NewApplicationButton } from '@/components/new-application-button'
 import { StatusChangeDialog } from '@/components/status-change-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +42,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { usePersistedState } from '@/hooks/use-persisted-state'
 import {
   DEFAULT_SORT,
   PAGE_SIZES,
@@ -41,6 +55,10 @@ import { formatDate } from '@/lib/dates'
 import { SOURCE_LABELS, WORK_MODE_LABELS } from '@/lib/enums'
 import { STATUS_LABELS } from '@/lib/status'
 
+type View = 'table' | 'board'
+const VIEW_KEY = 'jobtracker-applications-view'
+const isView = (v: unknown): v is View => v === 'table' || v === 'board'
+
 const ARCHIVED_LABELS = {
   exclude: 'Hide archived',
   include: 'Include archived',
@@ -51,7 +69,12 @@ export function ApplicationsPage() {
   const search = useSearch({ from: '/applications' })
   const navigate = useNavigate({ from: '/applications' })
   const query = toListQuery(search)
-  const { data, isPending, isError, error, isPlaceholderData } = useApplications(query)
+  const [view, setView] = usePersistedState<View>(VIEW_KEY, 'table', isView)
+  const { data, isPending, isError, error, isPlaceholderData } = useApplications(query, {
+    enabled: view === 'table',
+  })
+  const { sort: _sort, page: _page, page_size: _pageSize, ...boardQuery } = query
+  const board = useBoardApplications(boardQuery, { enabled: view === 'board' })
 
   /** Updates filters; any change other than paging goes back to page 1. */
   const setSearch = (patch: Partial<ApplicationsSearch>, keepPage = false) =>
@@ -93,7 +116,7 @@ export function ApplicationsPage() {
       <PageHeader
         title="Applications"
         description="Every job you've applied to, in one place."
-        actions={<QuickAddDialog />}
+        actions={<NewApplicationButton />}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -152,51 +175,90 @@ export function ApplicationsPage() {
             <X data-icon="inline-end" />
           </Button>
         )}
-        <div className="ml-auto">
-          <ColumnToggle table={table} />
+        <div className="ml-auto flex gap-2">
+          {view === 'table' && <ColumnToggle table={table} />}
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            value={view}
+            onValueChange={(v) => isView(v) && setView(v)}
+            aria-label="View"
+          >
+            <ToggleGroupItem value="table" aria-label="Table view">
+              <Rows3 />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="board" aria-label="Board view">
+              <Columns3 />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </div>
 
-      {selected.length > 0 && <BulkBar selected={selected} onDone={clearSelection} />}
-
-      {isPending ? (
-        <TableSkeleton />
-      ) : isError ? (
-        <EmptyState
-          icon={ListChecks}
-          title="Could not load applications"
-          description={error.message}
-        />
-      ) : data.total === 0 ? (
-        hasActiveFilters(search) ? (
+      {view === 'board' ? (
+        board.isPending ? (
+          <TableSkeleton />
+        ) : board.isError ? (
           <EmptyState
-            icon={Search}
-            title="No matches"
-            description="No applications match these filters. Try widening or resetting them."
+            icon={ListChecks}
+            title="Could not load applications"
+            description={board.error.message}
           />
-        ) : (
+        ) : board.data.length === 0 && !hasActiveFilters(search) ? (
           <EmptyState
             icon={ListChecks}
             title="No applications yet"
             description="Add your first application to start tracking it."
-            action={<QuickAddDialog />}
+            action={<NewApplicationButton />}
           />
+        ) : (
+          <KanbanBoard apps={board.data} query={boardQuery} />
         )
       ) : (
         <>
-          <ApplicationsTable
-            table={table}
-            sort={query.sort ?? DEFAULT_SORT}
-            onSortChange={(sort) => setSearch({ sort: sort === DEFAULT_SORT ? undefined : sort })}
-            dimmed={isPlaceholderData}
-          />
-          <Pagination
-            page={data.page}
-            pageSize={data.page_size}
-            total={data.total}
-            onPage={(page) => setSearch({ page: page === 1 ? undefined : page }, true)}
-            onPageSize={(size) => setSearch({ page_size: size === 50 ? undefined : size })}
-          />
+          {selected.length > 0 && <BulkBar selected={selected} onDone={clearSelection} />}
+
+          {isPending ? (
+            <TableSkeleton />
+          ) : isError ? (
+            <EmptyState
+              icon={ListChecks}
+              title="Could not load applications"
+              description={error.message}
+            />
+          ) : data.total === 0 ? (
+            hasActiveFilters(search) ? (
+              <EmptyState
+                icon={Search}
+                title="No matches"
+                description="No applications match these filters. Try widening or resetting them."
+              />
+            ) : (
+              <EmptyState
+                icon={ListChecks}
+                title="No applications yet"
+                description="Add your first application to start tracking it."
+                action={<NewApplicationButton />}
+              />
+            )
+          ) : (
+            <>
+              <ApplicationsTable
+                table={table}
+                sort={query.sort ?? DEFAULT_SORT}
+                onSortChange={(sort) =>
+                  setSearch({ sort: sort === DEFAULT_SORT ? undefined : sort })
+                }
+                dimmed={isPlaceholderData}
+              />
+              <Pagination
+                page={data.page}
+                pageSize={data.page_size}
+                total={data.total}
+                onPage={(page) => setSearch({ page: page === 1 ? undefined : page }, true)}
+                onPageSize={(size) => setSearch({ page_size: size === 50 ? undefined : size })}
+              />
+            </>
+          )}
         </>
       )}
     </>
@@ -225,6 +287,7 @@ function SearchBox({ value, onChange }: { value: string; onChange: (value: strin
       <Input
         type="search"
         aria-label="Search company, title, or notes"
+        data-page-search
         placeholder="Search company, title, notes…"
         className="pl-8"
         value={text}

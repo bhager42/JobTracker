@@ -32,14 +32,14 @@ SessionDep = Annotated[Session, Depends(get_session)]
 ClockDep = Annotated[Clock, Depends(get_clock)]
 
 
-def _auto_close_settings(session: SessionDep) -> AutoCloseSettings:
+def auto_close_settings(session: SessionDep) -> AutoCloseSettings:
     return load_auto_close(session)
 
 
-AutoCloseDep = Annotated[AutoCloseSettings, Depends(_auto_close_settings)]
+AutoCloseDep = Annotated[AutoCloseSettings, Depends(auto_close_settings)]
 
 
-def _out(app: Application, cfg: AutoCloseSettings) -> ApplicationOut:
+def application_out(app: Application, cfg: AutoCloseSettings) -> ApplicationOut:
     out = ApplicationOut.model_validate(app)
     out.auto_close_at = auto_close.auto_close_at(app, cfg)
     return out
@@ -91,7 +91,7 @@ def list_applications(
     )
     items, total = svc.list_applications(session, filters, sort, page, page_size)
     return ApplicationPage(
-        items=[_out(a, cfg) for a in items],
+        items=[application_out(a, cfg) for a in items],
         total=total,
         page=page,
         page_size=page_size,
