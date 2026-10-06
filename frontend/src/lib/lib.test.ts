@@ -8,7 +8,7 @@ import {
 } from '@/lib/application-form'
 import { nextSort, toListQuery, validateApplicationsSearch } from '@/lib/applications-search'
 import { formatDate, todayISO } from '@/lib/dates'
-import { formatSalary } from '@/lib/format'
+import { currencySymbol, formatSalary, groupDigits } from '@/lib/format'
 import { STATUSES, STATUS_META, isTerminal, statusLabel } from '@/lib/status'
 import { makeApplication } from '@/test/render-app'
 
@@ -150,6 +150,16 @@ describe('formatting', () => {
     expect(formatSalary(120000, null, 'USD')).toBe('$120K+')
     expect(formatSalary(null, 90000, 'USD')).toBe('Up to $90K')
     expect(formatSalary(null, null, 'USD')).toBe('')
+  })
+
+  test('money input helpers', () => {
+    expect(groupDigits('')).toBe('')
+    expect(groupDigits('950')).toBe('950')
+    expect(groupDigits('120000')).toBe('120,000')
+    expect(groupDigits('1500000')).toBe('1,500,000')
+    expect(currencySymbol('USD')).toBe('$')
+    expect(currencySymbol('EUR')).toBe('€')
+    expect(currencySymbol('eu')).toBe('EU')
   })
 })
 

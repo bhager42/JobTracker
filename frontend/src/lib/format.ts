@@ -30,3 +30,27 @@ export function formatSalary(
 /** A 0–1 rate as a whole percentage, or "—" when there's nothing to divide by. */
 export const percent = (value: number | null | undefined) =>
   value === null || value === undefined ? '—' : `${Math.round(value * 100)}%`
+
+const groupSeparator =
+  new Intl.NumberFormat().formatToParts(1000).find((p) => p.type === 'group')?.value ?? ','
+
+/** "120000" → "120,000" in the browser's locale. Works on the digit string, so nothing is lost. */
+export const groupDigits = (digits: string) =>
+  digits.replace(/\B(?=(\d{3})+(?!\d))/g, groupSeparator)
+
+/** "USD" → "$", "EUR" → "€"; an unknown or partial code is shown as typed. */
+export function currencySymbol(currency: string): string {
+  try {
+    return (
+      new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency,
+        currencyDisplay: 'narrowSymbol',
+      })
+        .formatToParts(0)
+        .find((p) => p.type === 'currency')?.value ?? currency
+    )
+  } catch {
+    return currency.toUpperCase()
+  }
+}

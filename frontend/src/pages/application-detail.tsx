@@ -31,6 +31,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
 import { EnumSelect } from '@/components/enum-select'
 import { FormField } from '@/components/form-field'
+import { MoneyInput } from '@/components/money-input'
 import { StatusBadge } from '@/components/status-badge'
 import { StatusChangeDialog } from '@/components/status-change-dialog'
 import { StatusTimeline } from '@/components/status-timeline'
@@ -293,6 +294,7 @@ function Detail({ app }: { app: ApplicationDetail }) {
 
 function DetailsCard({ form }: { form: UseFormReturn<ApplicationFormValues> }) {
   const { errors } = form.formState
+  const currency = useWatch({ control: form.control, name: 'salary_currency' })
   const text = (
     name: keyof ApplicationFormValues & string,
     label: string,
@@ -304,6 +306,32 @@ function DetailsCard({ form }: { form: UseFormReturn<ApplicationFormValues> }) {
     return (
       <FormField label={label} htmlFor={id} error={error} className={className}>
         <Input id={id} {...errorProps(id, error)} {...props} {...form.register(name)} />
+      </FormField>
+    )
+  }
+  const money = (
+    name: 'salary_min' | 'salary_max' | 'salary_expectation',
+    label: string,
+    placeholder?: string,
+    className?: string,
+  ) => {
+    const id = `f-${name}`
+    const error = errors[name]?.message
+    return (
+      <FormField label={label} htmlFor={id} error={error} className={className}>
+        <Controller
+          control={form.control}
+          name={name}
+          render={({ field }) => (
+            <MoneyInput
+              id={id}
+              {...errorProps(id, error)}
+              {...field}
+              currency={currency.trim()}
+              placeholder={placeholder}
+            />
+          )}
+        />
       </FormField>
     )
   }
@@ -349,13 +377,13 @@ function DetailsCard({ form }: { form: UseFormReturn<ApplicationFormValues> }) {
         {select('source', 'Source', SOURCE_LABELS)}
         {/* All salary fields in one row: the posted range, then what you asked for. */}
         <div className="grid grid-cols-[1fr_1fr_5rem] gap-2 sm:col-span-2 sm:grid-cols-[1fr_1fr_5rem_1.25fr]">
-          {text('salary_min', 'Salary min', { inputMode: 'numeric' })}
-          {text('salary_max', 'Salary max', { inputMode: 'numeric' })}
+          {money('salary_min', 'Salary min')}
+          {money('salary_max', 'Salary max')}
           {text('salary_currency', 'Currency', { maxLength: 3, className: 'uppercase' })}
-          {text(
+          {money(
             'salary_expectation',
             'Salary expectation',
-            { inputMode: 'numeric', placeholder: 'What you asked for' },
+            'What you asked for',
             'col-span-3 sm:col-span-1',
           )}
         </div>

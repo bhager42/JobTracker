@@ -194,7 +194,10 @@ test('the detail page saves a salary expectation', async () => {
     'GET /api/applications/:id': () => Response.json(app),
     'PATCH /api/applications/:id': ({ body }) => Response.json({ ...app, ...(body as object) }),
   })
-  await user.type(await screen.findByLabelText('Salary expectation'), '145000')
+  expect(await screen.findByLabelText('Salary min')).toHaveValue('120,000')
+  const expectation = screen.getByLabelText('Salary expectation')
+  await user.type(expectation, '145000')
+  expect(expectation).toHaveValue('145,000')
   await user.click(screen.getByRole('button', { name: 'Save changes' }))
   await waitFor(() =>
     expect(api.calls.find((c) => c.method === 'PATCH')?.req.body).toMatchObject({
