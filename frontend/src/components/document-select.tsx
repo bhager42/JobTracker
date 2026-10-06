@@ -67,6 +67,9 @@ export function DocumentSelect({
       <Select
         value={value === null ? NONE : String(value)}
         onValueChange={(v) => {
+          // Radix reports "" when the selected item is added to the list in the same render
+          // (a just-uploaded document); Number("") would select a nonexistent document 0.
+          if (v === '') return
           if (v === UPLOAD) input.current?.click()
           else onChange(v === NONE ? null : Number(v))
         }}
