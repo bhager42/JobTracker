@@ -58,7 +58,7 @@ def ever_reached(statuses: frozenset[Status]) -> ColumnElement[bool]:
     )
 
 
-def count(session: Session, stmt: Select[tuple[int]]) -> int:
+def count(session: Session, stmt: Select[int]) -> int:
     return session.scalar(stmt) or 0
 
 
@@ -260,9 +260,7 @@ def summary(session: Session, f: MetricsFilter) -> Summary:
             select(Application.status, func.count())
             .where(*f.conditions())
             .group_by(Application.status)
-        )
-        .tuples()
-        .all()
+        ).all()
     )
     by_round = dict(
         session.execute(
@@ -270,9 +268,7 @@ def summary(session: Session, f: MetricsFilter) -> Summary:
             .where(*f.conditions(), Application.status == Status.REJECTED_AFTER_INTERVIEW)
             .group_by(Application.interview_rounds)
             .order_by(Application.interview_rounds)
-        )
-        .tuples()
-        .all()
+        ).all()
     )
     return Summary(
         total_applied=sum(status_counts.values()),

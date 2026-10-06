@@ -78,4 +78,4 @@ def recent_activity(session: Session, limit: int = 15) -> list[tuple[StatusHisto
         .order_by(StatusHistory.changed_at.desc(), StatusHistory.id.desc())
         .limit(limit)
     )
-    return [(h, a) for h, a in rows.tuples()]
+    return [(h, a) for h, a in rows]

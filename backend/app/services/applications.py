@@ -159,7 +159,7 @@ class ApplicationFilter:
     date_to: date | None = None
     archived: ArchivedFilter = "exclude"
 
-    def apply(self, stmt: Select[tuple[Application]]) -> Select[tuple[Application]]:
+    def apply(self, stmt: Select[Application]) -> Select[Application]:
         if self.statuses:
             stmt = stmt.where(Application.status.in_(self.statuses))
         if self.sources:
