@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { resumePdf, spoofedPdf } from './fixtures'
+import { longNameResumePdf, resumePdf, spoofedPdf } from './fixtures'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -65,4 +65,38 @@ test('a file whose contents do not match its extension is rejected', async ({ pa
     page.getByText("totally-a-resume.pdf: The file's contents don't match its .pdf extension."),
   ).toBeVisible()
   expect(await count()).toBe(before)
+})
+
+test('dropping a resume on the New application dialog uploads and selects it', async ({ page }) => {
+  await page.goto('/applications')
+  await page.getByRole('button', { name: 'New application' }).first().click()
+  const dialog = page.getByRole('dialog', { name: 'New application' })
+  await dialog.getByLabel('Company').fill('Dropzone Labs')
+  await dialog.getByLabel('Job title').fill('Platform Engineer')
+
+  // Playwright can't drag a real file from the OS, so dispatch the drop with a DataTransfer.
+  const resume = dialog.getByRole('combobox', { name: 'Resume' })
+  const dataTransfer = await page.evaluateHandle(
+    ({ name, mimeType, bytes }) => {
+      const transfer = new DataTransfer()
+      transfer.items.add(new File([new Uint8Array(bytes)], name, { type: mimeType }))
+      return transfer
+    },
+    { ...longNameResumePdf, bytes: [...longNameResumePdf.buffer] },
+  )
+  await resume.dispatchEvent('dragover', { dataTransfer })
+  await expect(resume).toContainText('Drop to upload')
+  await resume.dispatchEvent('drop', { dataTransfer })
+  const name = longNameResumePdf.name.replace(/\.pdf$/, '')
+  await expect(resume).toContainText(name)
+
+  // The long name is cut off inside its column instead of running into the Cover letter field.
+  const resumeBox = (await resume.boundingBox())!
+  const coverBox = (await dialog.getByRole('combobox', { name: 'Cover letter' }).boundingBox())!
+  expect(resumeBox.x + resumeBox.width).toBeLessThanOrEqual(coverBox.x)
+
+  await dialog.getByRole('button', { name: 'Add application' }).click()
+  await expect(dialog).toBeHidden()
+  await page.getByRole('link', { name: 'Dropzone Labs' }).click()
+  await expect(page.getByRole('list', { name: 'Attached documents' })).toContainText(name)
 })

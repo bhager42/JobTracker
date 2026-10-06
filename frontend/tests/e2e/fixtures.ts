@@ -30,6 +30,13 @@ export const resumePdf = {
   buffer: pdf('Jane Doe - Backend Resume'),
 }
 
+/** A long filename, to check it stays inside its field. */
+export const longNameResumePdf = {
+  name: 'Jane_Doe_Senior_Backend_Engineer_Resume_Final_Version_October_2026_Updated.pdf',
+  mimeType: 'application/pdf',
+  buffer: pdf('Jane Doe - Senior Backend Resume'),
+}
+
 /** An executable renamed to .pdf: must be rejected by content, not extension. */
 export const spoofedPdf = {
   name: 'totally-a-resume.pdf',
