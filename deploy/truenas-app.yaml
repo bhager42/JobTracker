@@ -1,9 +1,10 @@
 # Paste into TrueNAS SCALE 25.10: Apps -> Discover Apps -> ⋮ -> Install via YAML.
-# Change: the dataset path, TZ, and ALLOWED_HOSTS. Pin the image to a released version.
+# Change: the dataset path, TZ, and ALLOWED_HOSTS. `latest` is the newest release; to stay on
+# one version instead, use its tag (e.g. 0.1.6).
 # See README.md "Install on TrueNAS SCALE" for the dataset and permission steps.
 services:
   jobtracker:
-    image: ghcr.io/bhager42/jobtracker:0.1.0
+    image: ghcr.io/bhager42/jobtracker:latest
     container_name: jobtracker
     restart: unless-stopped
     user: "568:568"

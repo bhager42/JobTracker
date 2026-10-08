@@ -36,7 +36,7 @@ The dataset must be local ZFS, not an NFS or SMB share, because SQLite's write-a
 
 **Apps → Discover Apps → ⋮ → Install via YAML.** Name it `jobtracker` and paste [deploy/truenas-app.yaml](deploy/truenas-app.yaml). Then change:
 
-- `image` to your GHCR path. A version tag such as `:0.1.0` is safer than `:latest`.
+- `image` to your GHCR path. `:latest` is always the newest release; use a version tag such as `:0.1.6` to stay on one version.
 - under `volumes`, the dataset path (Option A), or switch to the named volume (Option B)
 - `TZ` to your time zone. It decides what "today" and "this week" mean.
 - `ALLOWED_HOSTS` to every name and IP you'll use to open the app, e.g. `truenas.local,192.168.1.10`. See [Security](#security).
@@ -69,7 +69,7 @@ Everything lives in `/data`: the database (`jobtracker.db`, plus `-wal` and `-sh
 ## Updating
 
 1. Take a snapshot first (or rely on the periodic task).
-2. Change the `image` tag to the new version and save, or use the app's **Update** action if you track `:latest`.
+2. With `:latest`, use the app's **Update** action. With a version tag, change it to the new version and save.
 
 Database migrations run automatically when the new version starts. If something goes wrong, go back to the previous tag and roll the dataset back to the snapshot you took.
 
