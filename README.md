@@ -122,7 +122,7 @@ Requires [uv](https://docs.astral.sh/uv/), Node 24, and pnpm.
 
 ## Releasing
 
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lints, tests, and audits dependencies. It then builds the `linux/amd64` image, scans it with Trivy, and runs the end-to-end suite against it started from `compose.yaml`. Pushes to `main` publish `:main` and `:sha-<commit>`.
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lints, tests, and audits dependencies. It then builds the `linux/amd64` image, scans it with Trivy, and runs the end-to-end suite against it started from `compose.yaml`. Only release tags publish an image; pushes to `main` build and test it without publishing.
 
 To publish a release:
 
