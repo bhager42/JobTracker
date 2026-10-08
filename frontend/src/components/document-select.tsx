@@ -1,3 +1,4 @@
+import { Upload } from 'lucide-react'
 import { useRef, useState, type DragEvent } from 'react'
 
 import { useDocuments } from '@/api/documents'
@@ -18,8 +19,8 @@ const NONE = '__none__'
 const UPLOAD = '__upload__'
 
 /**
- * Picks one library document of a kind, or uploads a new one (via the menu or by dropping a
- * file on the trigger) and picks it.
+ * Picks one library document of a kind, or uploads a new one and picks it: from the menu, by
+ * dropping a file on the picker or the strip under it, or by clicking that strip.
  */
 export function DocumentSelect({
   id,
@@ -39,6 +40,7 @@ export function DocumentSelect({
   const { uploadFiles, isUploading } = useUploadFiles()
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
+  const noun = kind === 'cover_letter' ? 'cover letter' : kind
 
   const upload = async (file: File) => {
     const [doc] = await uploadFiles([file], kind)
@@ -54,7 +56,7 @@ export function DocumentSelect({
 
   return (
     <div
-      className="min-w-0"
+      className="grid min-w-0 gap-1.5"
       onDragOver={(e) => {
         e.preventDefault()
         if (!isUploading) setOver(true)
@@ -99,12 +101,25 @@ export function DocumentSelect({
           <SelectItem value={UPLOAD}>Upload new…</SelectItem>
         </SelectContent>
       </Select>
+      <button
+        type="button"
+        disabled={isUploading}
+        aria-label={`Upload a ${noun}: drop a file here or press to browse`}
+        onClick={() => input.current?.click()}
+        className={cn(
+          'flex items-center justify-center gap-1.5 rounded-lg border border-dashed px-2 py-1.5 text-xs text-muted-foreground transition-colors outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-60',
+          over && 'border-primary bg-muted text-foreground',
+        )}
+      >
+        <Upload className="size-3.5" aria-hidden />
+        {over ? 'Drop to upload' : 'Drop a file here, or click to browse'}
+      </button>
       <input
         ref={input}
         type="file"
         hidden
         accept={ACCEPT_ATTRIBUTE}
-        aria-label={`Upload a ${kind === 'cover_letter' ? 'cover letter' : kind}`}
+        aria-label={`Upload a ${noun}`}
         onChange={async (e) => {
           const file = e.target.files?.[0]
           e.target.value = ''

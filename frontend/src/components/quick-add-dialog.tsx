@@ -76,7 +76,13 @@ export function QuickAddDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent
+        className="sm:max-w-lg"
+        // A file dropped outside the Resume/Cover letter drop targets would otherwise make the
+        // browser open it, leaving the page and losing the form.
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>New application</DialogTitle>
           <DialogDescription>

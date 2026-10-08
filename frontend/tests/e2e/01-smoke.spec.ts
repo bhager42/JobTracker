@@ -74,6 +74,11 @@ test('dropping a resume on the New application dialog uploads and selects it', a
   await dialog.getByLabel('Company').fill('Dropzone Labs')
   await dialog.getByLabel('Job title').fill('Platform Engineer')
 
+  // The drop target is visible before anything is dragged over it.
+  await expect(
+    dialog.getByRole('button', { name: 'Upload a resume: drop a file here or press to browse' }),
+  ).toBeVisible()
+
   // Playwright can't drag a real file from the OS, so dispatch the drop with a DataTransfer.
   const resume = dialog.getByRole('combobox', { name: 'Resume' })
   const dataTransfer = await page.evaluateHandle(
