@@ -34,7 +34,6 @@ export function DocumentDropzone({
       role="button"
       tabIndex={disabled ? -1 : 0}
       aria-disabled={disabled}
-      aria-label={`Upload ${multiple ? 'files' : 'a file'}: drop here or press to browse`}
       onClick={() => !disabled && input.current?.click()}
       onKeyDown={(e) => {
         if (!disabled && (e.key === 'Enter' || e.key === ' ')) {

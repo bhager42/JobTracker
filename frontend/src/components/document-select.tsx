@@ -104,7 +104,7 @@ export function DocumentSelect({
       <button
         type="button"
         disabled={isUploading}
-        aria-label={`Upload a ${noun}: drop a file here or press to browse`}
+        aria-label={`${over ? 'Drop to upload' : 'Drop a file here, or click to browse'} (${noun})`}
         onClick={() => input.current?.click()}
         className={cn(
           'flex items-center justify-center gap-1.5 rounded-lg border border-dashed px-2 py-1.5 text-xs text-muted-foreground transition-colors outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-60',

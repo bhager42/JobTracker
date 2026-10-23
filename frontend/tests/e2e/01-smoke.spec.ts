@@ -76,7 +76,7 @@ test('dropping a resume on the New application dialog uploads and selects it', a
 
   // The drop target is visible before anything is dragged over it.
   await expect(
-    dialog.getByRole('button', { name: 'Upload a resume: drop a file here or press to browse' }),
+    dialog.getByRole('button', { name: 'Drop a file here, or click to browse (resume)' }),
   ).toBeVisible()
 
   // Playwright can't drag a real file from the OS, so dispatch the drop with a DataTransfer.
