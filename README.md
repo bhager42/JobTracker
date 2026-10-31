@@ -130,3 +130,7 @@ To publish a release:
 2. Commit, then tag and push: `git tag v0.2.0 && git push origin v0.2.0`.
 
 CI checks that the tag matches `pyproject.toml`, then publishes `:0.2.0`, `:0.2`, and `:latest`.
+
+## License
+
+JobTracker is licensed under the [GNU Affero General Public License v3.0](LICENSE). If you run a modified version for other people over a network, you must offer them its source code.
