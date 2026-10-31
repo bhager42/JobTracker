@@ -1,6 +1,6 @@
 [project]
 name = "jobtracker"
-version = "0.1.7"
+version = "0.1.8"
 description = "Self-hosted job application tracker"
 license = "AGPL-3.0-only"
 requires-python = ">=3.13,<3.14"
