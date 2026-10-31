@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import {
   BarChart3,
   BriefcaseBusiness,
+  CodeXml,
   FileText,
   LayoutDashboard,
   ListChecks,
@@ -32,6 +33,8 @@ const NAV_ITEMS = [
   { to: '/metrics', label: 'Metrics', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ] as const
+
+const SOURCE_URL = 'https://github.com/bhager42/JobTracker'
 
 export function AppSidebar() {
   return (
@@ -73,6 +76,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        <SourceCode />
         <SignOut />
         <ApiStatus />
       </SidebarFooter>
@@ -96,6 +100,22 @@ function ApiStatus() {
       />
       <span className="group-data-[collapsible=icon]:hidden">{label}</span>
     </div>
+  )
+}
+
+// AGPL-3.0 §13: offer the source to everyone using the app over the network.
+function SourceCode() {
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild tooltip="Source code">
+          <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+            <CodeXml />
+            <span>Source code</span>
+          </a>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
   )
 }
 
