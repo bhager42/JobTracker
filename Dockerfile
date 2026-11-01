@@ -11,7 +11,7 @@ COPY frontend/ .
 RUN pnpm build
 
 # ---- backend runtime ----
-FROM docker.io/library/python:3.13-slim@sha256:b92e6b9bb1ea9d826e9956fd8d30bf18bc384c130231d74fdf0ba3460c290b0b AS runtime
+FROM docker.io/library/python:3.15-slim@sha256:94d3426f1def7db4a106a232ac121bfd975393e5dfd40a619b955fae45fe7913 AS runtime
 ARG APP_VERSION=0.1.0
 ARG BUILD_SHA=dev
 ENV PYTHONDONTWRITEBYTECODE=1 \
