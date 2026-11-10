@@ -6,6 +6,11 @@ No release so far needs a manual upgrade step. Database migrations run automatic
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-10
+
+### Added
+- This changelog, backfilled from 0.1.0.
+
 ### Changed
 - The install docs use `1.0.0` as the example version tag.
 - Frontend dependencies: `@hookform/resolvers` 7.0.5 and, for the unit tests, jsdom 31.0.0.
@@ -124,7 +129,8 @@ The first release: a self-hosted job application tracker for one user, shipped a
 - Optional password sign-in, with security hardening: Host and Origin checks, no CORS, and a non-root container with a read-only root filesystem.
 - A TrueNAS SCALE 25.10 install guide and app template.
 
-[Unreleased]: https://github.com/bhager42/JobTracker/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/bhager42/JobTracker/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/bhager42/JobTracker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bhager42/JobTracker/compare/v0.1.8...v1.0.0
 [0.1.8]: https://github.com/bhager42/JobTracker/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/bhager42/JobTracker/compare/v0.1.6...v0.1.7
