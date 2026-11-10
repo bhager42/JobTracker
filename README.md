@@ -127,7 +127,8 @@ CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) lints, tests, and audi
 To publish a release:
 
 1. Set the new version in `backend/pyproject.toml`.
-2. Commit, then tag and push: `git tag v1.0.0 && git push origin v1.0.0`.
+2. In [CHANGELOG.md](CHANGELOG.md), move the Unreleased entries under a heading for the new version.
+3. Commit, then tag and push: `git tag v1.0.0 && git push origin v1.0.0`.
 
 CI checks that the tag matches `pyproject.toml`, then publishes `:1.0.0`, `:1.0`, and `:latest`.
 
