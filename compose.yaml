@@ -1,7 +1,11 @@
 # Local prod-like run: `docker compose up --build` then open http://localhost:8080
 services:
   jobtracker:
-    build: .
+    build:
+      context: .
+      args:
+        # `make run` passes the version from backend/pyproject.toml.
+        APP_VERSION: ${APP_VERSION:-0.0.0-dev}
     image: jobtracker:dev
     container_name: jobtracker
     user: "568:568"

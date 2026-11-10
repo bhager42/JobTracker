@@ -2484,7 +2484,7 @@
   },
   "info": {
     "title": "JobTracker",
-    "version": "0.1.0"
+    "version": "0.0.0-dev"
   },
   "openapi": "3.1.0",
   "paths": {
