@@ -4,6 +4,8 @@ export PATH := $(HOME)/.local/bin:$(PATH)
 DEV_DATA := $(CURDIR)/.data
 # Use docker if present, otherwise podman.
 DOCKER ?= $(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
+# The one place the version is set; images built here report it.
+VERSION := $(shell sed -n 's/^version = "\(.*\)"/\1/p' backend/pyproject.toml)
 
 install:
 	cd backend && uv sync
@@ -37,7 +39,7 @@ format:
 	cd frontend && pnpm format
 
 build:
-	$(DOCKER) build --format docker -t jobtracker:dev .
+	$(DOCKER) build --format docker --build-arg APP_VERSION=$(VERSION) -t jobtracker:dev .
 
 run:
-	$(DOCKER) compose up --build
+	APP_VERSION=$(VERSION) $(DOCKER) compose up --build

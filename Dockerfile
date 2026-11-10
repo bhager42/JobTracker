@@ -12,7 +12,8 @@ RUN pnpm build
 
 # ---- backend runtime ----
 FROM docker.io/library/python:3.13-slim@sha256:b92e6b9bb1ea9d826e9956fd8d30bf18bc384c130231d74fdf0ba3460c290b0b AS runtime
-ARG APP_VERSION=0.1.0
+# The real version comes from backend/pyproject.toml, passed in by the Makefile and CI.
+ARG APP_VERSION=0.0.0-dev
 ARG BUILD_SHA=dev
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

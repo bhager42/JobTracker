@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     # A backup ZIP holds every document, so it gets its own, larger limit.
     max_import_mb: int = Field(default=1024, ge=1, le=10240)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
-    app_version: str = "0.1.0"
+    # Images get the real version through APP_VERSION at build time.
+    app_version: str = "0.0.0-dev"
     build_sha: str = "dev"
     static_dir: Path = Path(__file__).resolve().parent.parent / "static"
     # Optional single-password login (PLAN.md §9.2). Off when both are unset.
