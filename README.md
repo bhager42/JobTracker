@@ -36,7 +36,7 @@ The dataset must be local ZFS, not an NFS or SMB share, because SQLite's write-a
 
 **Apps → Discover Apps → ⋮ → Install via YAML.** Name it `jobtracker` and paste [deploy/truenas-app.yaml](deploy/truenas-app.yaml). Then change:
 
-- `image` to your GHCR path. `:latest` is always the newest release; use a version tag such as `:0.1.8` to stay on one version.
+- `image` to your GHCR path. `:latest` is always the newest release; use a version tag such as `:1.0.0` to stay on one version.
 - under `volumes`, the dataset path (Option A), or switch to the named volume (Option B)
 - `TZ` to your time zone. It decides what "today" and "this week" mean.
 - `ALLOWED_HOSTS` to every name and IP you'll use to open the app, e.g. `truenas.local,192.168.1.10`. See [Security](#security).

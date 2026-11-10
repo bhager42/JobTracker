@@ -1,6 +1,6 @@
 # Paste into TrueNAS SCALE 25.10: Apps -> Discover Apps -> ⋮ -> Install via YAML.
 # Change: the dataset path, TZ, and ALLOWED_HOSTS. `latest` is the newest release; to stay on
-# one version instead, use its tag (e.g. 0.1.8).
+# one version instead, use its tag (e.g. 1.0.0).
 # See README.md "Install on TrueNAS SCALE" for the dataset and permission steps.
 services:
   jobtracker:
