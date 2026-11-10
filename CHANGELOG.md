@@ -8,6 +8,7 @@ No release so far needs a manual upgrade step. Database migrations run automatic
 
 ### Changed
 - The install docs use `1.0.0` as the example version tag.
+- Frontend dependencies: `@hookform/resolvers` 7.0.5 and, for the unit tests, jsdom 31.0.0.
 
 ## [1.0.0] - 2026-11-10
 
