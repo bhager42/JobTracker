@@ -58,5 +58,10 @@
     "vite": "^8.3.8",
     "vitest": "^5.1.1"
   },
-  "packageManager": "pnpm@10.34.5"
+  "packageManager": "pnpm@10.34.5",
+  "pnpm": {
+    "overrides": {
+      "minimatch@>=7.0.0 <11.0.1": "^11.0.1"
+    }
+  }
 }
