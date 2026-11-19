@@ -6,6 +6,11 @@ No release so far needs a manual upgrade step. Database migrations run automatic
 
 ## [Unreleased]
 
+### Changed
+- Backend dependencies: FastAPI 0.165.0, SQLAlchemy 2.1.9, pydantic-settings 2.16.3, and python-multipart 0.0.34.
+- Frontend dependencies: TanStack Query 5.108.0, lucide-react 1.75.0, react-hook-form 7.92.0, recharts 3.11.0, and `@hookform/resolvers` 7.0.7. Build and test tools: Vite 8.3.8, Vitest 5.1.1, Playwright 1.65.1, oxlint 1.94.0, and Prettier 3.10.1.
+- Dependabot no longer proposes major updates to `@types/node`, which has to match the Node 24 image used for the frontend build.
+
 ## [1.0.1] - 2026-11-10
 
 ### Added

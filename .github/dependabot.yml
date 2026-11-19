@@ -19,3 +19,7 @@ updates:
     schedule: { interval: monthly }
     groups:
       frontend: { patterns: ["*"] }
+    ignore:
+      # Matches the node:24 build image; bump together with the Dockerfile.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
