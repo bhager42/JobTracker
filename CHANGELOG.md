@@ -6,6 +6,8 @@ No release so far needs a manual upgrade step. Database migrations run automatic
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-18
+
 ### Changed
 - Backend dependencies: FastAPI 0.165.0, SQLAlchemy 2.1.9, pydantic-settings 2.16.3, and python-multipart 0.0.34.
 - Frontend dependencies: TanStack Query 5.108.0, lucide-react 1.75.0, react-hook-form 7.92.0, recharts 3.11.0, and `@hookform/resolvers` 7.0.7. Build and test tools: Vite 8.3.8, Vitest 5.1.1, Playwright 1.65.1, oxlint 1.94.0, and Prettier 3.10.1.
@@ -134,7 +136,8 @@ The first release: a self-hosted job application tracker for one user, shipped a
 - Optional password sign-in, with security hardening: Host and Origin checks, no CORS, and a non-root container with a read-only root filesystem.
 - A TrueNAS SCALE 25.10 install guide and app template.
 
-[Unreleased]: https://github.com/bhager42/JobTracker/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/bhager42/JobTracker/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/bhager42/JobTracker/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/bhager42/JobTracker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bhager42/JobTracker/compare/v0.1.8...v1.0.0
 [0.1.8]: https://github.com/bhager42/JobTracker/compare/v0.1.7...v0.1.8
