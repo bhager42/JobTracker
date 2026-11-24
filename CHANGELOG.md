@@ -6,6 +6,8 @@ No release so far needs a manual upgrade step. Database migrations run automatic
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-11-24
+
 ### Changed
 - Backend dependencies: pydantic 2.14.4.
 - Frontend dependencies: TanStack Query 5.108.4, lucide-react 1.79.0, recharts 3.11.1, and `@hookform/resolvers` 7.0.9. Test and lint tools: `@testing-library/jest-dom` 8.0.0, `@axe-core/playwright` 4.14.1, oxlint 1.95.0, and ruff 0.17.6.
@@ -144,7 +146,8 @@ The first release: a self-hosted job application tracker for one user, shipped a
 - Optional password sign-in, with security hardening: Host and Origin checks, no CORS, and a non-root container with a read-only root filesystem.
 - A TrueNAS SCALE 25.10 install guide and app template.
 
-[Unreleased]: https://github.com/bhager42/JobTracker/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/bhager42/JobTracker/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/bhager42/JobTracker/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/bhager42/JobTracker/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/bhager42/JobTracker/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/bhager42/JobTracker/compare/v0.1.8...v1.0.0
