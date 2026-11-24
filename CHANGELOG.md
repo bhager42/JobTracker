@@ -6,6 +6,14 @@ No release so far needs a manual upgrade step. Database migrations run automatic
 
 ## [Unreleased]
 
+### Changed
+- Backend dependencies: pydantic 2.14.4.
+- Frontend dependencies: TanStack Query 5.108.4, lucide-react 1.79.0, recharts 3.11.1, and `@hookform/resolvers` 7.0.9. Test and lint tools: `@testing-library/jest-dom` 8.0.0, `@axe-core/playwright` 4.14.1, oxlint 1.95.0, and ruff 0.17.6.
+- The GitHub Actions used by CI are updated.
+
+### Security
+- The shadcn CLI, a development tool, no longer pulls in a version of minimatch with a denial-of-service advisory. The app and the image were not affected.
+
 ## [1.0.2] - 2026-11-18
 
 ### Changed
